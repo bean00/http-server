@@ -1,12 +1,13 @@
 package com.bean00;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.io.StringWriter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -28,76 +29,76 @@ public class ServerTest {
             "Accept-Encoding: gzip,deflate\r\n" +
             "\r\n";
 
-    private String simple200Response = "HTTP/1.1 200 OK\r\n";
-    private String simple404Response = "HTTP/1.1 404 Not Found\r\n";
-    private String simple500Response = "HTTP/1.1 500 Internal Server Error\r\n";
+    private String simple200Response =
+            "HTTP/1.1 200 OK\r\n" +
+            "\r\n";
+    private String simple404Response =
+            "HTTP/1.1 404 Not Found\r\n" +
+            "\r\n";
+    private String simple500Response =
+            "HTTP/1.1 500 Internal Server Error\r\n" +
+            "\r\n";
+
+    private StringWriter writer;
+    private MessageController messageController;
+    private Server server;
+
+    @BeforeEach
+    public void setup() {
+        writer = new StringWriter();
+        messageController = new MessageController();
+        server = new Server();
+    }
 
     @Test
-    public void run_respondWith200_withAValidTarget() {
-        StringWriter stringWriter = new StringWriter();
-        MessageController messageController = createMessageController(
-                requestWithAValidURL, stringWriter);
-        Server server = new Server();
+    public void run_respondWith200_withAValidTarget() throws IOException {
+        BufferedReader reader = createBufferedReader(requestWithAValidURL);
 
-        server.run(messageController);
-        String response = stringWriter.toString();
+        server.run(messageController, reader, writer);
+        String response = writer.toString();
 
         assertEquals(simple200Response, response);
     }
 
     @Test
-    public void run_respondsWith404_ifTargetNotFound() {
-        StringWriter stringWriter = new StringWriter();
-        MessageController messageController = createMessageController(
-                requestWithAMissingURL, stringWriter);
-        Server server = new Server();
+    public void run_respondsWith404_ifTargetNotFound() throws IOException {
+        BufferedReader reader = createBufferedReader(requestWithAMissingURL);
 
-        server.run(messageController);
-        String response = stringWriter.toString();
+        server.run(messageController, reader, writer);
+        String response = writer.toString();
 
         assertEquals(simple404Response, response);
     }
 
     @Test
-    public void run_respondsCorrectly_toTwoGetRequests() {
+    public void run_respondsCorrectly_toTwoGetRequests() throws IOException {
         String twoRequests = requestWithAValidURL + requestWithAMissingURL;
         String expectedResponses = simple200Response + simple404Response;
-        StringWriter stringWriter = new StringWriter();
-        MessageController messageController = createMessageController(
-                twoRequests, stringWriter);
-        Server server = new Server();
+        BufferedReader reader = createBufferedReader(twoRequests);
 
-        server.run(messageController);
-        server.run(messageController);
-        String response = stringWriter.toString();
+        server.run(messageController, reader, writer);
+        server.run(messageController, reader, writer);
+        String response = writer.toString();
 
         assertEquals(expectedResponses, response);
     }
 
     @Test
-    public void run_respondsWith500_whenThereIsANonHandledError() {
-        String dummyRequest = "";
-        InputStream inputStream = new ByteArrayInputStream(dummyRequest.getBytes());
-        BufferedReader in = new BufferedReader(new InputStreamReader(inputStream));
-        StringWriter stringWriter = new StringWriter();
-        PrintWriter out = new PrintWriter(stringWriter);
-        MessageController messageController = new ServerErrorMessageController(in, out);
-        Server server = new Server();
+    public void run_respondsWith500_whenThereIsANonHandledError() throws IOException {
+        BufferedReader reader = createBufferedReader(requestWithAValidURL);
+        MessageController messageController = new ServerErrorMessageController();
 
-        server.run(messageController);
-        String response = stringWriter.toString();
+        server.run(messageController, reader, writer);
+        String response = writer.toString();
 
         assertEquals(simple500Response, response);
     }
 
-    private MessageController createMessageController(String request,
-                                                      StringWriter stringWriter) {
+    private BufferedReader createBufferedReader(String request) {
         InputStream inputStream = new ByteArrayInputStream(request.getBytes());
-        BufferedReader in = new BufferedReader(new InputStreamReader(inputStream));
-        PrintWriter out = new PrintWriter(stringWriter);
-        MessageController messageController = new MessageController(in, out);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 
-        return messageController;
+        return reader;
     }
 
 }

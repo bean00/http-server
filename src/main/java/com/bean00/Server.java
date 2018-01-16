@@ -1,18 +1,25 @@
 package com.bean00;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.Writer;
+
 public class Server {
 
-    public void run(MessageController messageController) {
+    public void run(MessageController messageController,
+                    BufferedReader in, Writer out) throws IOException {
         try {
-            Request request = messageController.getRequest();
+            RequestParser parser = new RequestParser(in);
 
-            Response response = messageController.interpretRequest(request);
+            Request request = parser.parseRequest();
 
-            messageController.writeResponse(response);
+            Response response = messageController.processRequest(request);
+
+            messageController.writeResponse(response, out);
         } catch (Throwable t) {
             Response response = new Response(Status.INTERNAL_SERVER_ERROR);
 
-            messageController.writeResponse(response);
+            messageController.writeResponse(response, out);
         }
     }
 

@@ -1,41 +1,65 @@
 package com.bean00;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class MessageController {
-    private RequestParser parser;
-    private PrintWriter out;
-    private RequestInterpreter interpreter = new RequestInterpreter();
 
-    public MessageController(BufferedReader in, PrintWriter out) {
-        parser = new RequestParser(in);
-
-        this.out = out;
-    }
-
-    public Request getRequest() throws IOException {
-        Request request = parser.parseRequest();
-
-        return request;
-    }
-
-    public Response interpretRequest(Request request) {
+    public Response processRequest(Request request) throws IOException {
         String requestURL = request.getRequestURL();
+        Path path = getFullPath(requestURL);
 
-        // *Note: shouldn't be choosing status code based on the requestURL
-        int statusCode = interpreter.chooseStatusCode(requestURL);
-        Response response = new Response(statusCode);
+        boolean rootDirectoryWasRequested = requestURL.equals("/");
+        boolean fileCanBeFound = checkIfFileCanBeFound(path);
+
+        byte[] body = new byte[0];
+        if (fileCanBeFound) {
+            body = getFileContents(path);
+        }
+
+        Response response;
+        if (rootDirectoryWasRequested) {
+            response = new Response(Status.OK);
+        } else if (!fileCanBeFound) {
+            response = new Response(Status.NOT_FOUND);
+        } else {
+            response = new Response(Status.OK, body);
+        }
 
         return response;
     }
 
-    public void writeResponse(Response response) {
+    public void writeResponse(Response response, Writer out) throws IOException {
         String responseString = response.toString();
 
-        out.print(responseString);
+        out.write(responseString);
         out.flush();
+    }
+
+    private Path getFullPath(String requestURL) {
+        String pathToPublic = "/Users/jonchin/8th-Light/projects/java-server/cob_spec/public";
+
+        Path path = Paths.get(pathToPublic, requestURL);
+
+        return path;
+    }
+
+    private boolean checkIfFileCanBeFound(Path path) {
+        boolean fileExists = Files.exists(path);
+        boolean pathPointsToDirectory = Files.isDirectory(path);
+
+        boolean fileCanBeFound = fileExists && !pathPointsToDirectory;
+
+        return fileCanBeFound;
+    }
+
+    private byte[] getFileContents(Path path) throws IOException {
+        byte[] body = Files.readAllBytes(path);
+
+        return body;
     }
 
 }

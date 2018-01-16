@@ -1,92 +1,81 @@
 package com.bean00;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class MessageControllerTest {
+    private Request request = new Request("/file1", new ArrayList<>());
+    private MessageController messageController;
 
-    @Test
-    public void getRequest_returnsARequest_thatHasTheRequestURL() throws IOException {
-        String expectedRequestURL = "/";
-        String simpleGETRequest =
-                "GET / HTTP/1.1\r\n" +
-                "\r\n";
-        StringWriter stringWriter = new StringWriter();
-        MessageController messageController = createMessageController(
-                simpleGETRequest, stringWriter);
-
-        Request request = messageController.getRequest();
-        String requestURL = request.getRequestURL();
-
-        assertEquals(expectedRequestURL, requestURL);
+    @BeforeEach
+    public void setup() {
+        messageController = new MessageController();
     }
 
     @Test
-    public void interpretRequest_choosesAStatusCodeBasedOnTheRequestURL() {
+    public void processRequest_returns200_ifTheURLIsValid() throws IOException {
         int expectedStatusCode = 200;
-        String dummyRequest = "";
-        String requestURL = "/";
-        List<String> headers = new ArrayList<>();
-        Request request = new Request(requestURL, headers);
-        StringWriter stringWriter = new StringWriter();
-        MessageController messageController = createMessageController(
-                dummyRequest, stringWriter);
 
-        Response response = messageController.interpretRequest(request);
+        Response response = messageController.processRequest(request);
         int statusCode = response.getStatusCode();
 
         assertEquals(expectedStatusCode, statusCode);
     }
 
     @Test
-    public void writeResponse_writesASimple200Response_when200IsPassedIn() {
-        String expectedResponse = "HTTP/1.1 200 OK\r\n";
-        String dummyRequest = "";
+    public void processRequest_returnsFileContents() throws IOException {
+        String expectedBodyAsAString = "file1 contents";
+        byte[] expectedBody = expectedBodyAsAString.getBytes();
+
+        Response response = messageController.processRequest(request);
+        byte[] body = response.getBody();
+
+        assertArrayEquals(expectedBody, body);
+    }
+
+    @Test
+    public void processRequest_returnsContentLength() throws IOException {
+        int expectedContentLength = 14;
+
+        Response response = messageController.processRequest(request);
+        int contentLength = response.getHeader("Content-Length");
+
+        assertEquals(expectedContentLength, contentLength);
+    }
+
+    @Test
+    public void writeResponse_writesASimple200Response_when200IsPassedIn() throws IOException {
+        String expectedResponse =
+                "HTTP/1.1 200 OK\r\n" +
+                "\r\n";
         Response response = new Response(200);
         StringWriter stringWriter = new StringWriter();
-        MessageController messageController = createMessageController(
-                dummyRequest, stringWriter);
 
-        messageController.writeResponse(response);
+        messageController.writeResponse(response, stringWriter);
         String responseString = stringWriter.toString();
 
         assertEquals(expectedResponse, responseString);
     }
 
     @Test
-    public void writeResponse_writesASimple404Response_when404IsPassedIn() {
-        String expectedResponse = "HTTP/1.1 404 Not Found\r\n";
-        String dummyRequest = "";
+    public void writeResponse_writesASimple404Response_when404IsPassedIn() throws IOException {
+        String expectedResponse =
+                "HTTP/1.1 404 Not Found\r\n" +
+                "\r\n";
         Response response = new Response(404);
         StringWriter stringWriter = new StringWriter();
-        MessageController messageController = createMessageController(
-                dummyRequest, stringWriter);
 
-        messageController.writeResponse(response);
+        messageController.writeResponse(response, stringWriter);
         String responseString = stringWriter.toString();
 
         assertEquals(expectedResponse, responseString);
-    }
-
-    private MessageController createMessageController(String request,
-                                                      StringWriter stringWriter) {
-        InputStream inputStream = new ByteArrayInputStream(request.getBytes());
-        BufferedReader in = new BufferedReader(new InputStreamReader(inputStream));
-        PrintWriter out = new PrintWriter(stringWriter);
-        MessageController messageController = new MessageController(in, out);
-
-        return messageController;
     }
 
 }
