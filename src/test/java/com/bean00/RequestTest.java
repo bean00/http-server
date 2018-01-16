@@ -11,16 +11,16 @@ public class RequestTest {
 
     @Test
     public void getRequestLine_getsRequestLine() {
-        String expectedRequestLine = "Get / HTTP/1.1";
+        String expectedRequestURL = "/";
         List<String> headers = Arrays.asList(
                 "Host: localhost:5000",
                 "Connection: Keep-Alive"
         );
 
-        Request request = new Request(expectedRequestLine, headers);
-        String requestLine = request.getRequestLine();
+        Request request = new Request(expectedRequestURL, headers);
+        String requestURL = request.getRequestURL();
 
-        assertEquals(expectedRequestLine, requestLine);
+        assertEquals(expectedRequestURL, requestURL);
     }
 
 }

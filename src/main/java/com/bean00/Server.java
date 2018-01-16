@@ -1,22 +1,19 @@
 package com.bean00;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.PrintWriter;
-
 public class Server {
-    private MessageController messageController;
 
-    public Server(BufferedReader in, PrintWriter out) {
-        messageController = new MessageController(in, out);
-    }
+    public void run(MessageController messageController) {
+        try {
+            Request request = messageController.getRequest();
 
-    public void handleGET() throws IOException {
-        Request request = messageController.readRequest();
+            Response response = messageController.interpretRequest(request);
 
-        Response response = messageController.interpretRequest(request);
+            messageController.writeResponse(response);
+        } catch (Throwable t) {
+            Response response = new Response(Status.INTERNAL_SERVER_ERROR);
 
-        messageController.writeResponse(response);
+            messageController.writeResponse(response);
+        }
     }
 
 }

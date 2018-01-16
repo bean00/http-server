@@ -2,13 +2,13 @@ package com.bean00;
 
 public class RequestInterpreter {
 
-    public int chooseStatusCode(String target) {
+    public int chooseStatusCode(String requestURL) {
         int statusCode;
 
-        if (target.equals("/")) {
-            statusCode = 200;
+        if (requestURL.equals("/")) {
+            statusCode = Status.OK;
         } else {
-            statusCode = 404;
+            statusCode = Status.NOT_FOUND;
         }
 
         return statusCode;

@@ -1,7 +1,6 @@
 package com.bean00;
 
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -14,52 +13,35 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 public class MessageControllerTest {
 
     @Test
-    public void readRequest_readsTheRequest() throws IOException {
-        BufferedReader in = Mockito.mock(BufferedReader.class);
-        PrintWriter out = Mockito.mock(PrintWriter.class);
-        Mockito.when(in.readLine()).thenReturn(
-                "GET / HTTP/1.1",
-                "Host: localhost:5000",
-                "Connection: Keep-Alive",
-                "");
-        MessageController messageController = new MessageController(in, out);
-
-        messageController.readRequest();
-
-        verify(in, times(4)).readLine();
-    }
-
-    @Test
-    public void readRequest_returnsTheRequestLine() throws IOException {
+    public void getRequest_returnsARequest_thatHasTheRequestURL() throws IOException {
+        String expectedRequestURL = "/";
         String simpleGETRequest =
-                "Get / HTTP/1.1\r\n" +
+                "GET / HTTP/1.1\r\n" +
                 "\r\n";
-        String expectedRequestLine = "Get / HTTP/1.1";
         StringWriter stringWriter = new StringWriter();
         MessageController messageController = createMessageController(
                 simpleGETRequest, stringWriter);
-        Request request = messageController.readRequest();
 
-        String requestString = request.getRequestLine();
+        Request request = messageController.getRequest();
+        String requestURL = request.getRequestURL();
 
-        assertEquals(expectedRequestLine, requestString);
+        assertEquals(expectedRequestURL, requestURL);
     }
 
     @Test
-    public void interpretRequest_choosesAStatusCodeBasedOnTheTarget() {
-        String requestLine = "Get / HTTP/1.1";
+    public void interpretRequest_choosesAStatusCodeBasedOnTheRequestURL() {
         int expectedStatusCode = 200;
-        BufferedReader in = Mockito.mock(BufferedReader.class);
-        PrintWriter out = Mockito.mock(PrintWriter.class);
+        String dummyRequest = "";
+        String requestURL = "/";
         List<String> headers = new ArrayList<>();
-        Request request = new Request(requestLine, headers);
-        MessageController messageController = new MessageController(in, out);
+        Request request = new Request(requestURL, headers);
+        StringWriter stringWriter = new StringWriter();
+        MessageController messageController = createMessageController(
+                dummyRequest, stringWriter);
 
         Response response = messageController.interpretRequest(request);
         int statusCode = response.getStatusCode();
@@ -69,32 +51,32 @@ public class MessageControllerTest {
 
     @Test
     public void writeResponse_writesASimple200Response_when200IsPassedIn() {
+        String expectedResponse = "HTTP/1.1 200 OK\r\n";
         String dummyRequest = "";
-        String simple200Response = "HTTP/1.1 200 OK\r\n";
-        StringWriter stringWriter = new StringWriter();
         Response response = new Response(200);
+        StringWriter stringWriter = new StringWriter();
         MessageController messageController = createMessageController(
                 dummyRequest, stringWriter);
 
         messageController.writeResponse(response);
         String responseString = stringWriter.toString();
 
-        assertEquals(simple200Response, responseString);
+        assertEquals(expectedResponse, responseString);
     }
 
     @Test
     public void writeResponse_writesASimple404Response_when404IsPassedIn() {
+        String expectedResponse = "HTTP/1.1 404 Not Found\r\n";
         String dummyRequest = "";
-        String simple404Response = "HTTP/1.1 404 Not Found\r\n";
-        StringWriter stringWriter = new StringWriter();
         Response response = new Response(404);
+        StringWriter stringWriter = new StringWriter();
         MessageController messageController = createMessageController(
                 dummyRequest, stringWriter);
 
         messageController.writeResponse(response);
         String responseString = stringWriter.toString();
 
-        assertEquals(simple404Response, responseString);
+        assertEquals(expectedResponse, responseString);
     }
 
     private MessageController createMessageController(String request,

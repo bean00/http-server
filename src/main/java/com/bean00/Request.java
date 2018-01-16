@@ -3,21 +3,14 @@ package com.bean00;
 import java.util.List;
 
 public class Request {
-    private String requestLine;
-    private String target;
+    private String requestURL;
 
-    public Request(String requestLine, List<String> headers) {
-        RequestParser parser = new RequestParser();
-        this.requestLine = requestLine;
-        this.target = parser.getRequestTarget(requestLine);
+    public Request(String requestURL, List<String> headers) {
+        this.requestURL = requestURL;
     }
 
-    public String getRequestLine() {
-        return requestLine;
-    }
-
-    public String getTarget() {
-        return target;
+    public String getRequestURL() {
+        return requestURL;
     }
 
 }
