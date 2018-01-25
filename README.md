@@ -1,1 +1,34 @@
 # HTTP Server
+
+A project that implements a basic HTTP server, built using Java. It's meant to serve up both static and dynamic websites. The behavior of the server is verified using Cob Spec (see Run Acceptance Tests section below).
+
+The HTTP Server supports the following:
+1. HTTP Methods: simple GET and HEAD.
+
+## Getting Started
+Clone this repository to your local machine
+<br>
+```$ git clone https://github.com/bean00/http-server.git```
+<br>
+```$ cd http-server```
+
+## Dependencies
+1. [Java 1.8](http://docs.oracle.com/javase/8/docs/)
+2. [JUnit 5.0](http://junit.org/junit5/docs/current/user-guide/)
+3. [Maven](https://maven.apache.org)
+
+## Run Tests
+Run the following command to run the unit tests: <br>
+```$ mvn test```
+
+## Run Acceptance Tests
+The acceptance test and instructions to run them can be found [here](https://github.com/8thlight/cob_spec) 
+
+## Compile and Build Package
+At the root dir run the command:<br>
+```$ mvn package```
+
+## Run the Server
+At the root directory run the command:<br>
+```java -jar target/http-server-1.0-SNAPSHOT-jar-with-dependencies.jar```
+
