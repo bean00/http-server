@@ -8,20 +8,79 @@ import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class RequestProcessorTest {
     private Request GETRequest = new Request("GET", "/file1", new ArrayList<>());
     private Request HEADRequest = new Request("HEAD", "/file1", new ArrayList<>());
-    private Request invalidHEADRequest = new Request("HEAD", "/foobar", new ArrayList<>());
+    private DataStore dataStore;
     private RequestProcessor requestProcessor;
 
     @BeforeEach
-    public void setup() {
-        requestProcessor = new RequestProcessor();
+    public void setup() throws IOException {
+        dataStore = mock(DataStore.class);
+        requestProcessor = new RequestProcessor(dataStore);
+        when(dataStore.dataCanBeFound("/file1")).thenReturn(true);
+        when(dataStore.getData("/file1")).thenReturn("file1 contents".getBytes());
+        when(dataStore.getMediaType("/file1")).thenReturn("text/plain");
     }
 
     @Test
-    public void processRequest_returns200_ifTheURLIsValid() throws IOException {
+    public void processRequest_returns200_forTheRootPath() throws IOException {
+        int expectedStatusCode = 200;
+        Request rootRequest = new Request("GET", "/", new ArrayList<>());
+
+        Response response = requestProcessor.processRequest(rootRequest);
+        int statusCode = response.getStatusCode();
+
+        assertEquals(expectedStatusCode, statusCode);
+    }
+
+    @Test
+    public void processRequest_returns404_ifTheURLIsInvalid() throws IOException {
+        int expectedStatusCode = 404;
+        Request invalidHEADRequest = new Request("HEAD", "/foobar", new ArrayList<>());
+        when(dataStore.dataCanBeFound("/foobar")).thenReturn(false);
+
+        Response response = requestProcessor.processRequest(invalidHEADRequest);
+        int statusCode = response.getStatusCode();
+
+        assertEquals(expectedStatusCode, statusCode);
+    }
+
+    @Test
+    public void processRequest_returns200_forAValidRequest_forHEAD() throws IOException {
+        int expectedStatusCode = 200;
+
+        Response response = requestProcessor.processRequest(HEADRequest);
+        int statusCode = response.getStatusCode();
+
+        assertEquals(expectedStatusCode, statusCode);
+    }
+
+    @Test
+    public void processRequest_returnsContentLength_forHEAD() throws IOException {
+        String expectedContentLength = "14";
+
+        Response response = requestProcessor.processRequest(HEADRequest);
+        String contentLength = response.getHeader("Content-Length");
+
+        assertEquals(expectedContentLength, contentLength);
+    }
+
+    @Test
+    public void processRequest_returnsContentType_forHEAD() throws IOException {
+        String expectedContentType = "text/plain";
+
+        Response response = requestProcessor.processRequest(HEADRequest);
+        String contentType = response.getHeader("Content-Type");
+
+        assertEquals(expectedContentType, contentType);
+    }
+
+    @Test
+    public void processRequest_returns200_forAValidRequest_forGET() throws IOException {
         int expectedStatusCode = 200;
 
         Response response = requestProcessor.processRequest(GETRequest);
@@ -31,47 +90,33 @@ public class RequestProcessorTest {
     }
 
     @Test
-    public void processRequest_returnsFileContents() throws IOException {
-        String expectedBodyAsAString = "file1 contents";
-        byte[] expectedBody = expectedBodyAsAString.getBytes();
+    public void processRequest_returnsContentLength_forGET() throws IOException {
+        String expectedContentLength = "14";
 
         Response response = requestProcessor.processRequest(GETRequest);
-        byte[] body = response.getBody();
-
-        assertArrayEquals(expectedBody, body);
-    }
-
-    @Test
-    public void processRequest_returnsContentLength() throws IOException {
-        int expectedContentLength = 14;
-
-        Response response = requestProcessor.processRequest(GETRequest);
-        int contentLength = response.getHeader("Content-Length");
+        String contentLength = response.getHeader("Content-Length");
 
         assertEquals(expectedContentLength, contentLength);
     }
 
     @Test
-    public void processRequest_returns404_ifTheURLIsInvalid_forHEADRequest() throws IOException {
-        int expectedStatusCode = 404;
+    public void processRequest_returnsContentType_forGET() throws IOException {
+        String expectedContentType = "text/plain";
 
-        Response response = requestProcessor.processRequest(invalidHEADRequest);
-        int statusCode = response.getStatusCode();
+        Response response = requestProcessor.processRequest(GETRequest);
+        String contentType = response.getHeader("Content-Type");
 
-        assertEquals(expectedStatusCode, statusCode);
+        assertEquals(expectedContentType, contentType);
     }
 
     @Test
-    public void processRequest_displaysContentLength_butNoBody_forHEAD() throws IOException {
-        String expectedResponse =
-                "HTTP/1.1 200 OK\r\n" +
-                "Content-Length: 14\r\n" +
-                "\r\n";
+    public void processRequest_returnsFileContents_forGET() throws IOException {
+        byte[] expectedBody = "file1 contents".getBytes();
 
-        Response response = requestProcessor.processRequest(HEADRequest);
-        String actualResponse = response.toString();
+        Response response = requestProcessor.processRequest(GETRequest);
+        byte[] body = response.getBody();
 
-        assertEquals(expectedResponse, actualResponse);
+        assertArrayEquals(expectedBody, body);
     }
 
 }

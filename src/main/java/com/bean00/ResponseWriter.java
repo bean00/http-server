@@ -1,20 +1,22 @@
 package com.bean00;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.Writer;
+import java.io.OutputStream;
 
 public class ResponseWriter {
-    private Writer out;
+    private OutputStream outputStream;
 
-    public ResponseWriter(Writer out) {
-        this.out = out;
+    public ResponseWriter(OutputStream outputStream) {
+        this.outputStream = outputStream;
     }
 
     public void writeResponse(Response response) throws IOException {
-        String responseString = response.toString();
+        byte[] responseAsByteArray = response.getResponseAsByteArray();
 
-        out.write(responseString);
-        out.flush();
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        byteArrayOutputStream.write(responseAsByteArray);
+        byteArrayOutputStream.writeTo(outputStream);
     }
 
 }

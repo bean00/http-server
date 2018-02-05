@@ -2,8 +2,10 @@ package com.bean00;
 
 import org.junit.jupiter.api.Test;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.StringWriter;
+import java.io.OutputStream;
+import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -15,26 +17,32 @@ public class ResponseWriterTest {
                 "HTTP/1.1 200 OK\r\n" +
                 "\r\n";
         Response response = new Response(200);
-        StringWriter stringWriter = new StringWriter();
-        ResponseWriter responseWriter = new ResponseWriter(stringWriter);
+        OutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        ResponseWriter responseWriter = new ResponseWriter(byteArrayOutputStream);
 
         responseWriter.writeResponse(response);
-        String responseString = stringWriter.toString();
+        String responseString = byteArrayOutputStream.toString();
 
         assertEquals(expectedResponse, responseString);
     }
 
     @Test
-    public void writeResponse_writesASimple404Response_when404IsPassedIn() throws IOException {
+    public void writeResponse_writesAFullResponse_withTextContent() throws IOException {
         String expectedResponse =
-                "HTTP/1.1 404 Not Found\r\n" +
-                "\r\n";
-        Response response = new Response(404);
-        StringWriter stringWriter = new StringWriter();
-        ResponseWriter responseWriter = new ResponseWriter(stringWriter);
+                "HTTP/1.1 200 OK\r\n" +
+                "Content-Length: 14\r\n" +
+                "\r\n" +
+                "file1 contents";
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Content-Length", "14");
+        String body = "file1 contents";
+        byte[] rawBody = body.getBytes();
+        Response response = new Response(200, Method.GET, headers, rawBody);
+        OutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        ResponseWriter responseWriter = new ResponseWriter(byteArrayOutputStream);
 
         responseWriter.writeResponse(response);
-        String responseString = stringWriter.toString();
+        String responseString = byteArrayOutputStream.toString();
 
         assertEquals(expectedResponse, responseString);
     }

@@ -3,105 +3,70 @@ package com.bean00;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.StringWriter;
+import java.io.OutputStream;
+import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class ServerTest {
-    private String requestWithAValidURL =
-            "GET / HTTP/1.1\r\n"+
-            "Host: localhost:5000\r\n" +
-            "Connection: Keep-Alive\r\n" +
-            "User-Agent: Apache-HttpClient/4.3.5 (java 1.5)\r\n" +
-            "Accept-Encoding: gzip,deflate\r\n" +
-            "\r\n";
-
-    private String requestWithAMissingURL =
-            "GET /foobar HTTP/1.1\r\n" +
-            "Host: localhost:5000\r\n" +
-            "Connection: Keep-Alive\r\n" +
-            "User-Agent: Apache-HttpClient/4.3.5 (java 1.5)\r\n" +
-            "Accept-Encoding: gzip,deflate\r\n" +
-            "\r\n";
-
     private String simple200Response =
             "HTTP/1.1 200 OK\r\n" +
-            "\r\n";
-    private String simple404Response =
-            "HTTP/1.1 404 Not Found\r\n" +
             "\r\n";
     private String simple500Response =
             "HTTP/1.1 500 Internal Server Error\r\n" +
             "\r\n";
 
-    private StringWriter stringWriter;
-    private ResponseWriter writer;
-    private RequestProcessor processor;
     private Server server;
+    private RequestParser parser;
+    private RequestProcessor processor;
+    private OutputStream byteArrayOutputStream;
+    private ResponseWriter writer;
+    private Request request;
 
     @BeforeEach
-    public void setup() {
-        stringWriter = new StringWriter();
-        writer = new ResponseWriter(stringWriter);
-        processor = new RequestProcessor();
+    public void setup() throws IOException {
         server = new Server();
+        parser = mock(RequestParser.class);
+        processor = mock(RequestProcessor.class);
+        byteArrayOutputStream = new ByteArrayOutputStream();
+        writer = new ResponseWriter(byteArrayOutputStream);
+
+        request = new Request("", "", new ArrayList<>());
+        when(parser.parseRequest()).thenReturn(request);
+        when(processor.processRequest(request)).thenReturn(new Response(200));
     }
 
     @Test
     public void run_respondWith200_withAValidTarget() throws IOException {
-        RequestParser parser = createRequestParser(requestWithAValidURL);
-
         server.run(parser, processor, writer);
-        String response = stringWriter.toString();
+        String response = byteArrayOutputStream.toString();
 
         assertEquals(simple200Response, response);
     }
 
     @Test
-    public void run_respondsWith404_ifTargetNotFound() throws IOException {
-        RequestParser parser = createRequestParser(requestWithAMissingURL);
-
-        server.run(parser, processor, writer);
-        String response = stringWriter.toString();
-
-        assertEquals(simple404Response, response);
-    }
-
-    @Test
     public void run_respondsCorrectly_toTwoGetRequests() throws IOException {
-        String twoRequests = requestWithAValidURL + requestWithAMissingURL;
-        String expectedResponses = simple200Response + simple404Response;
-        RequestParser parser = createRequestParser(twoRequests);
+        String expectedResponses = simple200Response + simple200Response;
 
         server.run(parser, processor, writer);
         server.run(parser, processor, writer);
-        String response = stringWriter.toString();
+        String response = byteArrayOutputStream.toString();
 
         assertEquals(expectedResponses, response);
     }
 
     @Test
     public void run_respondsWith500_whenThereIsANonHandledError() throws IOException {
-        RequestParser parser = createRequestParser(requestWithAValidURL);
-        RequestProcessor serverErrorProcessor = new ServerErrorRequestProcessor();
+        when(processor.processRequest(request)).thenThrow(new RuntimeException());
 
-        server.run(parser, serverErrorProcessor, writer);
-        String response = stringWriter.toString();
+        server.run(parser, processor, writer);
+        String response = byteArrayOutputStream.toString();
 
         assertEquals(simple500Response, response);
-    }
-
-    private RequestParser createRequestParser(String request) {
-        InputStream inputStream = new ByteArrayInputStream(request.getBytes());
-        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-        RequestParser parser = new RequestParser(reader);
-
-        return parser;
     }
 
 }

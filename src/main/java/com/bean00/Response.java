@@ -1,5 +1,7 @@
 package com.bean00;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -7,28 +9,37 @@ public class Response {
     private static final String PROTOCOL_VERSION = "HTTP/1.1";
 
     private int statusCode;
+    private HashMap<String, String> headers = new HashMap<>();
     private byte[] body = new byte[0];
-    private int contentLength;
-    private HashMap<String, Integer> headers = new HashMap<>();
     private boolean displayBody = true;
 
     public Response(int statusCode) {
         this.statusCode = statusCode;
     }
 
-    public Response(int statusCode, String requestMethod, byte[] body) {
+    public Response(int statusCode, String requestMethod, HashMap<String, String> headers, byte[] body) {
         this(statusCode);
+        this.headers = headers;
         this.body = body;
-        this.contentLength = body.length;
-        addAppropriateHeaders();
         this.displayBody = !requestMethod.equals(Method.HEAD);
     }
 
-    @Override
-    public String toString() {
-        String statusMessage = Status.getMessage(statusCode);
+    public byte[] getResponseAsByteArray() throws IOException {
+        ByteArrayOutputStream byteArrayOutputStream = writeOutResponseBeforeBody();
 
-        String response = buildResponse(statusMessage);
+        if (displayBody) {
+            byteArrayOutputStream.write(body);
+        }
+
+        byte[] response = byteArrayOutputStream.toByteArray();
+
+        return response;
+    }
+
+    public String getResponseAsString() throws IOException {
+        byte[] responseAsByteArray = getResponseAsByteArray();
+
+        String response = new String(responseAsByteArray);
 
         return response;
     }
@@ -41,61 +52,46 @@ public class Response {
         return body;
     }
 
-    public int getHeader(String header) {
+    public String getHeader(String header) {
         return headers.get(header);
     }
 
-    private void addAppropriateHeaders() {
-        addContentLengthHeader();
+    private ByteArrayOutputStream writeOutResponseBeforeBody() throws IOException {
+        byte[] statusLine = getStatusLine();
+        byte[] headers = getHeaders();
+        byte[] blankLine = getBlankLine();
+
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        byteArrayOutputStream.write(statusLine);
+        byteArrayOutputStream.write(headers);
+        byteArrayOutputStream.write(blankLine);
+
+        return byteArrayOutputStream;
     }
 
-    private void addContentLengthHeader() {
-        headers.put("Content-Length", contentLength);
-    }
+    private byte[] getStatusLine() {
+        String statusMessage = Status.getMessage(statusCode);
 
-    private String buildResponse(String statusMessage) {
-        String response = getStatusLine(statusMessage);
-
-        response += getHeadersAsAString();
-
-        response += getBlankLine();
-
-        if (displayBody) {
-            response += getBodyAsAString();
-        }
-
-        return response;
-    }
-
-    private String getStatusLine(String statusMessage) {
         String statusLine = PROTOCOL_VERSION + " " + statusCode + " " + statusMessage + "\r\n";
 
-        return statusLine;
+        return statusLine.getBytes();
     }
 
-    private String getHeadersAsAString() {
+    private byte[] getHeaders() {
         String headersAsAString = "";
 
-        if (!headers.isEmpty()) {
-            for (Map.Entry<String, Integer> header : headers.entrySet()) {
-                String headerString = header.getKey() + ": " + header.getValue() + "\r\n";
-                headersAsAString += headerString;
-            }
+        for (Map.Entry<String, String> header : headers.entrySet()) {
+            String headerString = header.getKey() + ": " + header.getValue() + "\r\n";
+            headersAsAString += headerString;
         }
 
-        return headersAsAString;
+        return headersAsAString.getBytes();
     }
 
-    private String getBlankLine() {
+    private byte[] getBlankLine() {
         String blankLine = "\r\n";
 
-        return blankLine;
-    }
-
-    private String getBodyAsAString() {
-        String bodyAsAString = new String(body);
-
-        return bodyAsAString;
+        return blankLine.getBytes();
     }
 
 }
