@@ -13,28 +13,16 @@ public class RequestParser {
     }
 
     public Request parseRequest() throws IOException {
-        String requestURL = parseRequestLine();
-        List<String> headers = parseHeaders();
-
-        Request request = new Request(requestURL, headers);
-
-        return request;
-    }
-
-    private String parseRequestLine() throws IOException {
         String requestLine = in.readLine();
-
-        String requestURL = getRequestURL(requestLine);
-
-        return requestURL;
-    }
-
-    private String getRequestURL(String requestLine) {
         String[] requestWords = requestLine.split("\\s");
 
-        String requestTarget = requestWords[1];
+        String requestMethod = requestWords[0];
+        String requestURL = requestWords[1];
+        List<String> headers = parseHeaders();
 
-        return requestTarget;
+        Request request = new Request(requestMethod, requestURL, headers);
+
+        return request;
     }
 
     private List<String> parseHeaders() throws IOException {

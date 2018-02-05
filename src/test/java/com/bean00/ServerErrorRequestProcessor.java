@@ -1,6 +1,6 @@
 package com.bean00;
 
-public class ServerErrorMessageController extends MessageController {
+public class ServerErrorRequestProcessor extends RequestProcessor {
 
     @Override
     public Response processRequest(Request request) {

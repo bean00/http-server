@@ -6,20 +6,22 @@ import java.util.Map;
 public class Response {
     private static final String PROTOCOL_VERSION = "HTTP/1.1";
 
-    private HashMap<String, Integer> headers = new HashMap<>();
     private int statusCode;
     private byte[] body = new byte[0];
     private int contentLength;
+    private HashMap<String, Integer> headers = new HashMap<>();
+    private boolean displayBody = true;
 
     public Response(int statusCode) {
         this.statusCode = statusCode;
     }
 
-    public Response(int statusCode, byte[] body) {
+    public Response(int statusCode, String requestMethod, byte[] body) {
         this(statusCode);
         this.body = body;
         this.contentLength = body.length;
-        addContentLengthHeader();
+        addAppropriateHeaders();
+        this.displayBody = !requestMethod.equals(Method.HEAD);
     }
 
     @Override
@@ -43,6 +45,10 @@ public class Response {
         return headers.get(header);
     }
 
+    private void addAppropriateHeaders() {
+        addContentLengthHeader();
+    }
+
     private void addContentLengthHeader() {
         headers.put("Content-Length", contentLength);
     }
@@ -54,7 +60,9 @@ public class Response {
 
         response += getBlankLine();
 
-        response += getBodyAsAString();
+        if (displayBody) {
+            response += getBodyAsAString();
+        }
 
         return response;
     }

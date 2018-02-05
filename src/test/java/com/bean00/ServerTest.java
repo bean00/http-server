@@ -39,33 +39,35 @@ public class ServerTest {
             "HTTP/1.1 500 Internal Server Error\r\n" +
             "\r\n";
 
-    private StringWriter writer;
-    private MessageController messageController;
+    private StringWriter stringWriter;
+    private ResponseWriter writer;
+    private RequestProcessor processor;
     private Server server;
 
     @BeforeEach
     public void setup() {
-        writer = new StringWriter();
-        messageController = new MessageController();
+        stringWriter = new StringWriter();
+        writer = new ResponseWriter(stringWriter);
+        processor = new RequestProcessor();
         server = new Server();
     }
 
     @Test
     public void run_respondWith200_withAValidTarget() throws IOException {
-        BufferedReader reader = createBufferedReader(requestWithAValidURL);
+        RequestParser parser = createRequestParser(requestWithAValidURL);
 
-        server.run(messageController, reader, writer);
-        String response = writer.toString();
+        server.run(parser, processor, writer);
+        String response = stringWriter.toString();
 
         assertEquals(simple200Response, response);
     }
 
     @Test
     public void run_respondsWith404_ifTargetNotFound() throws IOException {
-        BufferedReader reader = createBufferedReader(requestWithAMissingURL);
+        RequestParser parser = createRequestParser(requestWithAMissingURL);
 
-        server.run(messageController, reader, writer);
-        String response = writer.toString();
+        server.run(parser, processor, writer);
+        String response = stringWriter.toString();
 
         assertEquals(simple404Response, response);
     }
@@ -74,31 +76,32 @@ public class ServerTest {
     public void run_respondsCorrectly_toTwoGetRequests() throws IOException {
         String twoRequests = requestWithAValidURL + requestWithAMissingURL;
         String expectedResponses = simple200Response + simple404Response;
-        BufferedReader reader = createBufferedReader(twoRequests);
+        RequestParser parser = createRequestParser(twoRequests);
 
-        server.run(messageController, reader, writer);
-        server.run(messageController, reader, writer);
-        String response = writer.toString();
+        server.run(parser, processor, writer);
+        server.run(parser, processor, writer);
+        String response = stringWriter.toString();
 
         assertEquals(expectedResponses, response);
     }
 
     @Test
     public void run_respondsWith500_whenThereIsANonHandledError() throws IOException {
-        BufferedReader reader = createBufferedReader(requestWithAValidURL);
-        MessageController messageController = new ServerErrorMessageController();
+        RequestParser parser = createRequestParser(requestWithAValidURL);
+        RequestProcessor serverErrorProcessor = new ServerErrorRequestProcessor();
 
-        server.run(messageController, reader, writer);
-        String response = writer.toString();
+        server.run(parser, serverErrorProcessor, writer);
+        String response = stringWriter.toString();
 
         assertEquals(simple500Response, response);
     }
 
-    private BufferedReader createBufferedReader(String request) {
+    private RequestParser createRequestParser(String request) {
         InputStream inputStream = new ByteArrayInputStream(request.getBytes());
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+        RequestParser parser = new RequestParser(reader);
 
-        return reader;
+        return parser;
     }
 
 }

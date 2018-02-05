@@ -51,7 +51,7 @@ public class ResponseTest {
                 "file1 contents";
         String body = "file1 contents";
         byte[] rawBody = body.getBytes();
-        Response response = new Response(200, rawBody);
+        Response response = new Response(200, Method.GET, rawBody);
 
         String actualResponse = response.toString();
 
@@ -59,14 +59,29 @@ public class ResponseTest {
     }
 
     @Test
-    public void toString_stillAddsANewline_ifTheBodyIsEmpty() {
+    public void toString_includesContentLength_ifTheBodyIsEmpty() {
         String expectedResponse =
                 "HTTP/1.1 200 OK\r\n" +
                 "Content-Length: 0\r\n" +
                 "\r\n";
         String body = "";
         byte[] rawBody = body.getBytes();
-        Response response = new Response(200, rawBody);
+        Response response = new Response(200, Method.GET, rawBody);
+
+        String actualResponse = response.toString();
+
+        assertEquals(expectedResponse, actualResponse);
+    }
+
+    @Test
+    public void toString_includesContentLength_butNoBody_forHEADRequest() {
+        String expectedResponse =
+                "HTTP/1.1 200 OK\r\n" +
+                "Content-Length: 14\r\n" +
+                "\r\n";
+        String body = "file1 contents";
+        byte[] rawBody = body.getBytes();
+        Response response = new Response(200, Method.HEAD, rawBody);
 
         String actualResponse = response.toString();
 

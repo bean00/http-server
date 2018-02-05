@@ -31,6 +31,24 @@ public class RequestParserTest {
     }
 
     @Test
+    public void parseRequest_createsARequest_thatHasARequestMethod() throws IOException {
+        String expectedRequestMethod = "GET";
+        String getRequest =
+                "GET / HTTP/1.1\r\n" +
+                "Host: localhost:5000\r\n" +
+                "Connection: Keep-Alive\r\n" +
+                "\r\n";
+        InputStream inputStream = new ByteArrayInputStream(getRequest.getBytes());
+        BufferedReader in = new BufferedReader(new InputStreamReader(inputStream));
+        RequestParser parser = new RequestParser(in);
+
+        Request request = parser.parseRequest();
+        String requestMethod = request.getRequestMethod();
+
+        assertEquals(expectedRequestMethod, requestMethod);
+    }
+
+    @Test
     public void parseRequest_createsARequest_thatHasARequestURL() throws IOException {
         String expectedRequestURL = "/";
         String getRequest =

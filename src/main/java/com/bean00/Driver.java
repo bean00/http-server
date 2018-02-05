@@ -15,7 +15,7 @@ public class Driver {
 
         ServerSocket serverSocket = new ServerSocket(portNumber);
         Server server = new Server();
-        MessageController messageController = new MessageController();
+        RequestProcessor requestProcessor = new RequestProcessor();
 
         while (true) {
             Socket clientSocket = serverSocket.accept();
@@ -24,7 +24,10 @@ public class Driver {
             BufferedReader in = new BufferedReader(
                     new InputStreamReader(clientSocket.getInputStream()));
 
-            server.run(messageController, in, out);
+            RequestParser requestParser = new RequestParser(in);
+            ResponseWriter responseWriter = new ResponseWriter(out);
+
+            server.run(requestParser, requestProcessor, responseWriter);
 
             in.close();
             out.close();
