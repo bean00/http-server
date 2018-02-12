@@ -7,6 +7,7 @@ public class Status {
     public static final int OK = 200;
 
     // 4XX Client error responses
+    public static final int BAD_REQUEST = 400;
     public static final int NOT_FOUND = 404;
 
     // 5XX Server error responses
@@ -27,6 +28,7 @@ public class Status {
         statusMessages.put(OK, "OK");
 
         // 4XX Client error responses
+        statusMessages.put(BAD_REQUEST, "Bad Request");
         statusMessages.put(NOT_FOUND, "Not Found");
 
         // 5XX Server error responses

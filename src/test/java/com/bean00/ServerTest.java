@@ -16,9 +16,6 @@ public class ServerTest {
     private String simple200Response =
             "HTTP/1.1 200 OK\r\n" +
             "\r\n";
-    private String simple500Response =
-            "HTTP/1.1 500 Internal Server Error\r\n" +
-            "\r\n";
 
     private Server server;
     private RequestParser parser;
@@ -60,7 +57,23 @@ public class ServerTest {
     }
 
     @Test
+    public void run_respondsWith400_whenTheRequestIsBad() throws IOException {
+        String simple400Response =
+                "HTTP/1.1 400 Bad Request\r\n" +
+                "\r\n";
+        when(parser.parseRequest()).thenThrow(new BadRequestHttpException());
+
+        server.run(parser, processor, writer);
+        String response = byteArrayOutputStream.toString();
+
+        assertEquals(simple400Response, response);
+    }
+
+    @Test
     public void run_respondsWith500_whenThereIsANonHandledError() throws IOException {
+        String simple500Response =
+                "HTTP/1.1 500 Internal Server Error\r\n" +
+                "\r\n";
         when(processor.processRequest(request)).thenThrow(new RuntimeException());
 
         server.run(parser, processor, writer);

@@ -6,17 +6,19 @@ public class Server {
 
     public void run(RequestParser parser, RequestProcessor processor,
                     ResponseWriter writer) throws IOException {
+        Response response;
+
         try {
             Request request = parser.parseRequest();
 
-            Response response = processor.processRequest(request);
-
-            writer.writeResponse(response);
+            response = processor.processRequest(request);
+        } catch (BadRequestHttpException e) {
+            response = new Response(Status.BAD_REQUEST);
         } catch (Throwable t) {
-            Response response = new Response(Status.INTERNAL_SERVER_ERROR);
-
-            writer.writeResponse(response);
+            response = new Response(Status.INTERNAL_SERVER_ERROR);
         }
+
+        writer.writeResponse(response);
     }
 
 }
