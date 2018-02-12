@@ -1,4 +1,6 @@
-package com.bean00;
+package com.bean00.response;
+
+import com.bean00.request.Method;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

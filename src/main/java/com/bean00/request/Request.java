@@ -1,4 +1,4 @@
-package com.bean00;
+package com.bean00.request;
 
 import java.util.List;
 

@@ -1,5 +1,7 @@
-package com.bean00;
+package com.bean00.server;
 
+import com.bean00.httpexception.BadRequestHttpException;
+import com.bean00.request.Request;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 

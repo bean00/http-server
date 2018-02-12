@@ -1,4 +1,4 @@
-package com.bean00;
+package com.bean00.request;
 
 public class Method {
     public static final String GET = "GET";

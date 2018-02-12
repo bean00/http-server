@@ -1,5 +1,7 @@
-package com.bean00;
+package com.bean00.server;
 
+import com.bean00.request.Method;
+import com.bean00.response.Response;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;

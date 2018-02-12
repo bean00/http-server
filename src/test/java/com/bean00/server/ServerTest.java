@@ -1,5 +1,8 @@
-package com.bean00;
+package com.bean00.server;
 
+import com.bean00.httpexception.BadRequestHttpException;
+import com.bean00.request.Request;
+import com.bean00.response.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

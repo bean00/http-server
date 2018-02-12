@@ -1,4 +1,4 @@
-package com.bean00;
+package com.bean00.response;
 
 import org.junit.jupiter.api.Test;
 

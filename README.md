@@ -29,6 +29,11 @@ At the root dir run the command:<br>
 ```$ mvn package```
 
 ## Run the Server
-At the root directory run the command:<br>
-```java -jar target/http-server-1.0-SNAPSHOT-jar-with-dependencies.jar```
+- Run the command below from the root directory
+- Pass in a flag and an argument for the directory to serve files from (```[-d DIRECTORY]```)
+
+Proper usage:<br>
+```$ java -jar [SERVER JAR FILE] [-d DIRECTORY]```<br>
+Example:<br>
+```$ java -jar target/http-server-1.0-SNAPSHOT-jar-with-dependencies.jar -d public```
 

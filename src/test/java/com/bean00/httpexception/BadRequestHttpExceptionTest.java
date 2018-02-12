@@ -1,4 +1,4 @@
-package com.bean00;
+package com.bean00.httpexception;
 
 import org.junit.jupiter.api.Test;
 

@@ -1,4 +1,10 @@
-package com.bean00;
+package com.bean00.server;
+
+import com.bean00.datastore.DataStore;
+import com.bean00.request.Method;
+import com.bean00.request.Request;
+import com.bean00.response.Response;
+import com.bean00.response.Status;
 
 import java.io.IOException;
 import java.util.HashMap;

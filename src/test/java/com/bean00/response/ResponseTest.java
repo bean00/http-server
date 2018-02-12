@@ -1,5 +1,6 @@
-package com.bean00;
+package com.bean00.response;
 
+import com.bean00.request.Method;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;

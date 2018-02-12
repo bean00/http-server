@@ -1,4 +1,4 @@
-package com.bean00;
+package com.bean00.datastore;
 
 import org.apache.tika.Tika;
 

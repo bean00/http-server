@@ -1,4 +1,4 @@
-package com.bean00;
+package com.bean00.httpexception;
 
 public class BadRequestHttpException extends RuntimeException {
 
