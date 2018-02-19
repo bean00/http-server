@@ -24,7 +24,7 @@ public class RequestProcessorTest {
     public void setup() throws IOException {
         dataStore = mock(DataStore.class);
         requestProcessor = new RequestProcessor(dataStore);
-        when(dataStore.dataCanBeFound("/file1")).thenReturn(true);
+        when(dataStore.fileExists("/file1")).thenReturn(true);
         when(dataStore.getData("/file1")).thenReturn("file1 contents".getBytes());
         when(dataStore.getMediaType("/file1")).thenReturn("text/plain");
     }
@@ -44,7 +44,7 @@ public class RequestProcessorTest {
     public void processRequest_returns404_ifTheURLIsInvalid() throws IOException {
         int expectedStatusCode = 404;
         Request invalidHEADRequest = new Request("HEAD", "/foobar", new ArrayList<>());
-        when(dataStore.dataCanBeFound("/foobar")).thenReturn(false);
+        when(dataStore.fileExists("/foobar")).thenReturn(false);
 
         Response response = requestProcessor.processRequest(invalidHEADRequest);
         int statusCode = response.getStatusCode();

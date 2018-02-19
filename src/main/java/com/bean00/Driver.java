@@ -17,25 +17,27 @@ import java.net.Socket;
 public class Driver {
 
     public static void main(String[] args) throws IOException {
+        DataStore dataStore = new FileSystemDataStore("");
+        int portNumber;
         String pathToRoot;
 
         try {
-            ArgParser argParser = new ArgParser();
+            ArgParser argParser = new ArgParser(dataStore);
             ServerOptions options = argParser.buildServerOptions(args);
+            portNumber = options.getPort();
             pathToRoot = options.getDirectory();
         } catch (IllegalArgumentException e) {
             printErrorMessage();
             return;
         }
 
-        int portNumber = 5000;
         System.out.println("Server started");
         System.out.println("- Port: " + portNumber);
         System.out.println("- Directory: " + pathToRoot);
 
         ServerSocket serverSocket = new ServerSocket(portNumber);
         Server server = new Server();
-        DataStore dataStore = new FileSystemDataStore(pathToRoot);
+        dataStore = new FileSystemDataStore(pathToRoot);
         RequestProcessor requestProcessor = new RequestProcessor(dataStore);
 
         while (true) {

@@ -31,9 +31,13 @@ At the root dir run the command:<br>
 ## Run the Server
 - Run the command below from the root directory
 - Pass in a flag and an argument for the directory to serve files from (```[-d DIRECTORY]```)
+- Pass in an *optional flag and argument for the port to listen on (```[-p PORT]```)
+    - *The default port is 5000 
+- You can enter the arguments in any order
 
 Proper usage:<br>
 ```$ java -jar [SERVER JAR FILE] [-d DIRECTORY]```<br>
+```$ java -jar [SERVER JAR FILE] [-p PORT] [-d DIRECTORY]```<br>
 Example:<br>
-```$ java -jar target/http-server-1.0-SNAPSHOT-jar-with-dependencies.jar -d public```
-
+```$ java -jar target/http-server-1.0-SNAPSHOT-jar-with-dependencies.jar -d public```<br>
+```$ java -jar target/http-server-1.0-SNAPSHOT-jar-with-dependencies.jar -p 8080 -d public```

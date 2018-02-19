@@ -23,7 +23,7 @@ public class RequestProcessor {
         Response response;
         if (requestURL.equals("/")) {
             response = new Response(Status.OK);
-        } else if (!dataStore.dataCanBeFound(requestURL)) {
+        } else if (!dataStore.fileExists(requestURL)) {
             response = new Response(Status.NOT_FOUND);
         } else if (requestMethod.equals("HEAD")) {
             byte[] body = dataStore.getData(requestURL);

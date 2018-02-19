@@ -10,28 +10,49 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class FileSystemDataStoreTest {
-    private static final String PATH_TO_ROOT = "/Users/jonchin/8th-Light/projects/java-server/cob_spec/public";
+    private static final String PATH_TO_ROOT = "src/test/resources/data-store-test-files";
     private FileSystemDataStore dataStore = new FileSystemDataStore(PATH_TO_ROOT);
 
     @Test
-    public void dataCanBeFound_returnsTrue_whenTheDataCanBeFound() {
-        boolean dataCanBeFound = dataStore.dataCanBeFound("/file1");
+    public void directoryExists_returnsFalse_whenThePathDoesNotExist() {
+        boolean directoryExists = dataStore.directoryExists("/xx");
 
-        assertTrue(dataCanBeFound);
+        assertFalse(directoryExists);
     }
 
     @Test
-    public void dataCanBeFound_returnsFalse_whenTheFileDoesNotExist() {
-        boolean dataCanBeFound = dataStore.dataCanBeFound("/foobar");
+    public void directoryExists_returnsFalse_whenThePathPointsToAFile() {
+        boolean directoryExists = dataStore.directoryExists("/file1");
 
-        assertFalse(dataCanBeFound);
+        assertFalse(directoryExists);
     }
 
     @Test
-    public void dataCanBeFound_returnsFalse_whenTheFileIsADirectory() {
-        boolean dataCanBeFound = dataStore.dataCanBeFound("/directory");
+    public void directoryExists_returnsTrue_whenTheDirectoryExists() {
+        boolean directoryExists = dataStore.directoryExists("/directory");
 
-        assertFalse(dataCanBeFound);
+        assertTrue(directoryExists);
+    }
+
+    @Test
+    public void fileExists_returnsFalse_whenThePathDoesNotExist() {
+        boolean fileExists = dataStore.fileExists("/xx");
+
+        assertFalse(fileExists);
+    }
+
+    @Test
+    public void fileExists_returnsTrue_whenTheFileExists() {
+        boolean fileExists = dataStore.fileExists("/file1");
+
+        assertTrue(fileExists);
+    }
+
+    @Test
+    public void fileExists_returnsFalse_whenTheFileIsADirectory() {
+        boolean fileExists = dataStore.fileExists("/directory");
+
+        assertFalse(fileExists);
     }
 
     @Test

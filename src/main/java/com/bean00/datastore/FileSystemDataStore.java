@@ -14,12 +14,20 @@ public class FileSystemDataStore implements DataStore {
         this.pathToRoot = pathToRoot;
     }
 
-    public boolean dataCanBeFound(String url) {
+    public boolean directoryExists(String url) {
         Path path = getFullPath(url);
-        boolean fileExists = Files.exists(path);
-        boolean isFileDirectory = Files.isDirectory(path);
+        boolean pathExists = Files.exists(path);
+        boolean isDirectory = Files.isDirectory(path);
 
-        return fileExists && !isFileDirectory;
+        return pathExists && isDirectory;
+    }
+
+    public boolean fileExists(String url) {
+        Path path = getFullPath(url);
+        boolean pathExists = Files.exists(path);
+        boolean isDirectory = Files.isDirectory(path);
+
+        return pathExists && !isDirectory;
     }
 
     public byte[] getData(String url) throws IOException {
