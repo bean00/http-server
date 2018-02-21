@@ -2,6 +2,7 @@ package com.bean00.datastore;
 
 import org.apache.tika.Tika;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,31 +15,36 @@ public class FileSystemDataStore implements DataStore {
         this.pathToRoot = pathToRoot;
     }
 
-    public boolean directoryExists(String url) {
+    public boolean resourceExists(String url) {
         Path path = getFullPath(url);
-        boolean pathExists = Files.exists(path);
-        boolean isDirectory = Files.isDirectory(path);
 
-        return pathExists && isDirectory;
+        return Files.exists(path);
     }
 
-    public boolean fileExists(String url) {
+    public byte[] getResource(String url) throws IOException {
         Path path = getFullPath(url);
-        boolean pathExists = Files.exists(path);
-        boolean isDirectory = Files.isDirectory(path);
+        byte[] resource;
 
-        return pathExists && !isDirectory;
-    }
+        if (Files.isRegularFile(path)) {
+            resource = Files.readAllBytes(path);
+        } else {
+            resource = getDirectoryListing(url);
+        }
 
-    public byte[] getData(String url) throws IOException {
-        Path path = getFullPath(url);
-        return Files.readAllBytes(path);
+        return resource;
     }
 
     public String getMediaType(String url) throws IOException {
         Path path = getFullPath(url);
-        Tika tika = new Tika();
-        String contentType = tika.detect(path);
+        String contentType;
+
+        if (!Files.isDirectory(path)) {
+            Tika tika = new Tika();
+            contentType = tika.detect(path);
+        } else {
+            String HTMLContentType = "text/html; charset=utf-8";
+            contentType = HTMLContentType;
+        }
 
         return contentType;
     }
@@ -47,6 +53,20 @@ public class FileSystemDataStore implements DataStore {
         Path path = Paths.get(pathToRoot, requestURL);
 
         return path;
+    }
+
+    private byte[] getDirectoryListing(String url) {
+        File[] files = getFiles(pathToRoot + url);
+        ResourceBuilder resourceBuilder = new ResourceBuilder();
+        byte[] directoryListing = resourceBuilder.buildHtmlBody(files);
+
+        return directoryListing;
+    }
+
+    private File[] getFiles(String absoluteUrl) {
+        File directory = new File(absoluteUrl);
+
+        return directory.listFiles();
     }
 
 }

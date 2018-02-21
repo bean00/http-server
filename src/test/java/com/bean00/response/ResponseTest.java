@@ -97,4 +97,17 @@ public class ResponseTest {
         assertEquals(expectedResponse, actualResponse);
     }
 
+    @Test
+    public void getContentLength_returnsTheContentLength_asAnInteger() {
+        int expectedContentLength = 14;
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Content-Length", "14");
+        Response response = new Response(200, Method.GET, headers, new byte[0]);
+
+        String contentLengthAsString = response.getHeader("Content-Length");
+        int contentLength = Integer.parseInt(contentLengthAsString);
+
+        assertEquals(expectedContentLength, contentLength);
+    }
+
 }

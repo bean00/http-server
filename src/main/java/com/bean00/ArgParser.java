@@ -20,7 +20,7 @@ public class ArgParser {
                     port = Integer.parseInt(portAsString);
                     i++;
                 } else if (args[i].equals("-d")) {
-                    if (!dataStore.directoryExists(args[i + 1])) {
+                    if (!dataStore.resourceExists(args[i + 1])) {
                         throw new IllegalArgumentException();
                     }
 

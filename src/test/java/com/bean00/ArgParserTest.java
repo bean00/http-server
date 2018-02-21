@@ -17,8 +17,8 @@ public class ArgParserTest {
     public void setup() {
         dataStore = mock(DataStore.class);
         argParser = new ArgParser(dataStore);
-        when(dataStore.directoryExists("path")).thenReturn(true);
-        when(dataStore.directoryExists("path2")).thenReturn(true);
+        when(dataStore.resourceExists("path")).thenReturn(true);
+        when(dataStore.resourceExists("path2")).thenReturn(true);
     }
 
     @Test

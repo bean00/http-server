@@ -4,11 +4,9 @@ import java.io.IOException;
 
 public interface DataStore {
 
-    boolean directoryExists(String url);
+    boolean resourceExists(String url);
 
-    boolean fileExists(String url);
-
-    byte[] getData(String url) throws IOException;
+    byte[] getResource(String url) throws IOException;
 
     String getMediaType(String url) throws IOException;
 
