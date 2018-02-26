@@ -62,10 +62,10 @@ public class Driver {
                 "[ERROR] Invalid arguments passed in.\n" +
                 "\n" +
                 "Proper usage:\n" +
-                "> java -jar [SERVER JAR FILE] [-d DIRECTORY]\n" +
+                "> java -jar [SERVER JAR FILE] [-d DIRECTORY] [-p PORT]\n" +
                 "\n" +
                 "Example:\n" +
-                "> java -jar target/http-server.jar -d public\n"
+                "> java -jar target/http-server.jar -d public -p 5000\n"
         );
     }
 
