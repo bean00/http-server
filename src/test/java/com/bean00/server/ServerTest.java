@@ -1,6 +1,7 @@
 package com.bean00.server;
 
 import com.bean00.httpexception.BadRequestHttpException;
+import com.bean00.httpexception.NotFoundHttpException;
 import com.bean00.request.Request;
 import com.bean00.response.Response;
 import org.junit.jupiter.api.BeforeEach;
@@ -70,6 +71,19 @@ public class ServerTest {
         String response = byteArrayOutputStream.toString();
 
         assertEquals(simple400Response, response);
+    }
+
+    @Test
+    public void run_respondsWith404_whenTheUrlIsNotFound() throws IOException {
+        String simple404Response =
+                "HTTP/1.1 404 Not Found\r\n" +
+                "\r\n";
+        when(processor.processRequest(request)).thenThrow(new NotFoundHttpException());
+
+        server.run(parser, processor, writer);
+        String response = byteArrayOutputStream.toString();
+
+        assertEquals(simple404Response, response);
     }
 
     @Test

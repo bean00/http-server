@@ -31,13 +31,13 @@ public class RequestParser {
 
         String requestMethod = requestWords[0];
         String requestURL = requestWords[1];
-
         String httpVersion = requestWords[2];
+
+        List<String> headers = parseHeaders();
+
         if (!httpVersion.equals(EXPECTED_HTTP_VERSION)) {
             throw new BadRequestHttpException();
         }
-
-        List<String> headers = parseHeaders();
 
         Request request = new Request(requestMethod, requestURL, headers);
 
