@@ -29,14 +29,16 @@ public class ResourceBuilder {
         Arrays.sort(files);
 
         for (File file : files) {
-            list += addListTags(file.getName());
+            list += buildLinkElement(file);
         }
 
         return list;
     }
 
-    private String addListTags(String field) {
-        return "<li>" + field + "</li>\n";
+    private String buildLinkElement(File file) {
+        String fileName = file.getName();
+
+        return "<li><a href=\"/" + fileName + "\">" + fileName + "</a></li>\n";
     }
 
 }

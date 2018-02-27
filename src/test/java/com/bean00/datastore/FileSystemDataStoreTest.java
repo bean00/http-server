@@ -10,8 +10,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class FileSystemDataStoreTest {
-    private static final String PATH_TO_ROOT = "src/test/resources/test-files";
-    private FileSystemDataStore dataStore = new FileSystemDataStore(PATH_TO_ROOT);
+    public static final String PATH_TO_TEST_FILES = "src/test/resources/test-files";
+    private FileSystemDataStore dataStore = new FileSystemDataStore(PATH_TO_TEST_FILES);
 
     @Test
     public void resourceExists_returnsFalse_whenTheResourceDoesNotExist() {
@@ -46,11 +46,8 @@ public class FileSystemDataStoreTest {
     }
 
     @Test
-    public void getResource_returnsTheCorrectData_forADirectoryListing() throws IOException {
-        String expectedHTML =
-                "<li>file1</li>\n" +
-                "<li>file2</li>\n" +
-                "<li>file3</li>\n";
+    public void getResource_returnsData_thatContainsLinks() throws IOException {
+        String expectedHTML = "<li><a href=\"/file1\">file1</a></li>\n";
 
         byte[] data = dataStore.getResource("/directory");
         String dataAsString = new String(data);

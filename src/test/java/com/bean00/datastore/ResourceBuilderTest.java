@@ -39,13 +39,15 @@ public class ResourceBuilderTest {
     }
 
     @Test
-    public void buildHtmlBody_returnsHTML_thatHasTheSortedList_ofFiles() {
+    public void buildHtmlBody_returnsHTML_thatHasASortedList_ofFilesAndDirectories() {
         String expectedHTML =
-                "<li>directory</li>\n" +
-                "<li>file1</li>\n" +
-                "<li>file2</li>\n";
+                "<li><a href=\"/directory\">directory</a></li>\n" +
+                "<li><a href=\"/file1\">file1</a></li>\n" +
+                "<li><a href=\"/file2\">file2</a></li>\n" +
+                "<li><a href=\"/file3\">file3</a></li>\n";
+        File directory = new File(FileSystemDataStoreTest.PATH_TO_TEST_FILES + "/directory");
+        File[] files = directory.listFiles();
         ResourceBuilder builder = new ResourceBuilder();
-        File[] files = buildFilesArray();
 
         byte[] body = builder.buildHtmlBody(files);
         String bodyAsString = new String(body);
@@ -65,16 +67,6 @@ public class ResourceBuilderTest {
         String bodyAsString = new String(body);
 
         assertTrue(bodyAsString.contains(expectedHTML));
-    }
-
-    private File[] buildFilesArray() {
-        File file1 = new File("/file1");
-        File file2 = new File("/file2");
-        File directory = new File("/directory");
-        directory.mkdir();
-        File[] files = {file1, file2, directory};
-
-        return files;
     }
 
 }
