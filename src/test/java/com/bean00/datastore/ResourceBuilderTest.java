@@ -2,19 +2,20 @@ package com.bean00.datastore;
 
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ResourceBuilderTest {
-    private File[] emptyFileArray = new File[0];
+    private ResourceBuilder builder = new ResourceBuilder();
 
     @Test
     public void buildHtmlBody_returnsHTML_thatHasATitle() {
         String expectedTitle = "<title>Server</title>";
-        ResourceBuilder builder = new ResourceBuilder();
+        Path path = getPath(FileSystemDataStoreTest.PATH_TO_TEST_FILES);
 
-        byte[] body = builder.buildHtmlBody(emptyFileArray);
+        byte[] body = builder.buildHtmlBody(path, "/");
         String bodyAsString = new String(body);
 
         assertTrue(bodyAsString.contains(expectedTitle));
@@ -30,26 +31,35 @@ public class ResourceBuilderTest {
                 "</head>\n" +
                 "<body>\n" +
                 "<ul>\n";
-        ResourceBuilder builder = new ResourceBuilder();
+        Path path = getPath(FileSystemDataStoreTest.PATH_TO_TEST_FILES);
 
-        byte[] body = builder.buildHtmlBody(emptyFileArray);
+        byte[] body = builder.buildHtmlBody(path, "/");
         String bodyAsString = new String(body);
 
         assertTrue(bodyAsString.contains(expectedHTML));
     }
 
     @Test
-    public void buildHtmlBody_returnsHTML_thatHasASortedList_ofFilesAndDirectories() {
+    public void buildHtmlBody_returnsHTML_thatHasAListOfFiles_sorted() {
         String expectedHTML =
-                "<li><a href=\"/directory\">directory</a></li>\n" +
-                "<li><a href=\"/file1\">file1</a></li>\n" +
-                "<li><a href=\"/file2\">file2</a></li>\n" +
-                "<li><a href=\"/file3\">file3</a></li>\n";
-        File directory = new File(FileSystemDataStoreTest.PATH_TO_TEST_FILES + "/directory");
-        File[] files = directory.listFiles();
-        ResourceBuilder builder = new ResourceBuilder();
+                "<li><a href=\"/directory/file1\">file1</a></li>\n" +
+                "<li><a href=\"/directory/file2\">file2</a></li>\n" +
+                "<li><a href=\"/directory/file3\">file3</a></li>\n";
+        Path path = getPath(FileSystemDataStoreTest.PATH_TO_TEST_FILES + "/directory");
 
-        byte[] body = builder.buildHtmlBody(files);
+        byte[] body = builder.buildHtmlBody(path, "/directory");
+        String bodyAsString = new String(body);
+
+        assertTrue(bodyAsString.contains(expectedHTML));
+    }
+
+    @Test
+    public void buildHtmlBody_returnsHTML_forTheRootDirectory() {
+        String expectedHTML =
+                "<li><a href=\"/directory\">directory</a></li>\n";
+        Path path = getPath(FileSystemDataStoreTest.PATH_TO_TEST_FILES);
+
+        byte[] body = builder.buildHtmlBody(path, "/");
         String bodyAsString = new String(body);
 
         assertTrue(bodyAsString.contains(expectedHTML));
@@ -61,12 +71,16 @@ public class ResourceBuilderTest {
                 "</ul>\n" +
                 "</body>\n" +
                 "</html>\n";
-        ResourceBuilder builder = new ResourceBuilder();
+        Path path = getPath(FileSystemDataStoreTest.PATH_TO_TEST_FILES);
 
-        byte[] body = builder.buildHtmlBody(emptyFileArray);
+        byte[] body = builder.buildHtmlBody(path, "/");
         String bodyAsString = new String(body);
 
         assertTrue(bodyAsString.contains(expectedHTML));
+    }
+
+    private Path getPath(String pathString) {
+        return Paths.get(pathString);
     }
 
 }

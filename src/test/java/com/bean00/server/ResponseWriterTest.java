@@ -1,13 +1,13 @@
 package com.bean00.server;
 
-import com.bean00.request.Method;
-import com.bean00.response.Response;
+import com.bean00.httpmessages.HttpHeaders;
+import com.bean00.httpmessages.Method;
+import com.bean00.httpmessages.Response;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -35,8 +35,8 @@ public class ResponseWriterTest {
                 "Content-Length: 14\r\n" +
                 "\r\n" +
                 "file1 contents";
-        HashMap<String, String> headers = new HashMap<>();
-        headers.put("Content-Length", "14");
+        String[][] rawHeaders = {{"Content-Length", "14"}};
+        HttpHeaders headers = new HttpHeaders(rawHeaders);
         String body = "file1 contents";
         byte[] rawBody = body.getBytes();
         Response response = new Response(200, Method.GET, headers, rawBody);
@@ -50,4 +50,3 @@ public class ResponseWriterTest {
     }
 
 }
-

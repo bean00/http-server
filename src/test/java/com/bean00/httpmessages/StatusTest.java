@@ -1,4 +1,4 @@
-package com.bean00.response;
+package com.bean00.httpmessages;
 
 import org.junit.jupiter.api.Test;
 
@@ -11,6 +11,15 @@ public class StatusTest {
         String expectedMessage = "OK";
 
         String message = Status.getMessage(200);
+
+        assertEquals(expectedMessage, message);
+    }
+
+    @Test
+    public void getMessage_getsTheCorrectMessage_forA_201_status() {
+        String expectedMessage = "Created";
+
+        String message = Status.getMessage(201);
 
         assertEquals(expectedMessage, message);
     }
@@ -29,6 +38,15 @@ public class StatusTest {
         String expectedMessage = "Not Found";
 
         String message = Status.getMessage(404);
+
+        assertEquals(expectedMessage, message);
+    }
+
+    @Test
+    public void getMessage_getsTheCorrectMessage_forA_405_status() {
+        String expectedMessage = "Method Not Allowed";
+
+        String message = Status.getMessage(405);
 
         assertEquals(expectedMessage, message);
     }

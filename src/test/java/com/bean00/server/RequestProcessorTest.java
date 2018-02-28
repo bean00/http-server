@@ -1,23 +1,29 @@
 package com.bean00.server;
 
+import com.bean00.httpmessages.HttpHeaders;
 import com.bean00.datastore.DataStore;
-import com.bean00.httpexception.NotFoundHttpException;
-import com.bean00.request.Request;
-import com.bean00.response.Response;
+import com.bean00.datastore.FileSystemDataStore;
+import com.bean00.httpmessages.Request;
+import com.bean00.httpmessages.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class RequestProcessorTest {
-    private Request fileGETRequest = new Request("GET", "/file1", new ArrayList<>());
-    private Request fileHEADRequest = new Request("HEAD", "/file1", new ArrayList<>());
-    private Request directoryGETRequest = new Request("GET", "/directory", new ArrayList<>());
+    private Request fileGETRequest = new Request("GET", "/file1");
+    private Request fileHEADRequest = new Request("HEAD", "/file1");
+    private Request directoryGETRequest = new Request("GET", "/directory");
     private DataStore dataStore;
     private RequestProcessor requestProcessor;
 
@@ -31,15 +37,28 @@ public class RequestProcessorTest {
         when(dataStore.getMediaType("/file1")).thenReturn("text/plain");
 
         byte[] body = buildBody();
+        when(dataStore.isDirectory("/directory")).thenReturn(true);
         when(dataStore.resourceExists("/directory")).thenReturn(true);
         when(dataStore.getResource("/directory")).thenReturn(body);
         when(dataStore.getMediaType("/directory")).thenReturn("text/html; charset=utf-8");
+
+        when(dataStore.resourceExists("/existing")).thenReturn(true);
     }
 
     @Test
-    public void processRequest_returns200_forAValidRequest_toTheRootDirectory() throws IOException {
+    public void processRequest_returns200_forGETRequest() throws IOException {
         int expectedStatusCode = 200;
-        Request rootRequest = new Request("GET", "/", new ArrayList<>());
+
+        Response response = requestProcessor.processRequest(fileGETRequest);
+        int statusCode = response.getStatusCode();
+
+        assertEquals(expectedStatusCode, statusCode);
+    }
+
+    @Test
+    public void processRequest_returns200_forGETRequest_toTheRootDirectory() throws IOException {
+        int expectedStatusCode = 200;
+        Request rootRequest = new Request("GET", "/");
         when(dataStore.resourceExists("/")).thenReturn(true);
         when(dataStore.getResource("/")).thenReturn(new byte[0]);
 
@@ -50,13 +69,102 @@ public class RequestProcessorTest {
     }
 
     @Test
-    public void processRequest_returns200_forAValidRequest_forHEAD() throws IOException {
+    public void processRequest_returns200_forHEADRequest() throws IOException {
         int expectedStatusCode = 200;
 
         Response response = requestProcessor.processRequest(fileHEADRequest);
         int statusCode = response.getStatusCode();
 
         assertEquals(expectedStatusCode, statusCode);
+    }
+
+    @Test
+    public void processRequest_returns200_forPUTRequest_whenTheFileExists() throws IOException {
+        int expectedStatusCode = 200;
+        Request request = new Request("PUT", "/existing");
+
+        Response response = requestProcessor.processRequest(request);
+        int statusCode = response.getStatusCode();
+
+        assertEquals(expectedStatusCode, statusCode);
+    }
+
+    @Test
+    public void processRequest_returnsOnlyTheRequestLine_forPUTRequest() throws IOException {
+        String expectedResponseString =
+                "HTTP/1.1 200 OK\r\n" +
+                "\r\n";
+        Request request = new Request("PUT", "/existing");
+
+        Response response = requestProcessor.processRequest(request);
+        String responseString = response.toString();
+
+        assertEquals(expectedResponseString, responseString);
+    }
+
+    @Test
+    public void processRequest_rewritesTheFile_forPUTRequest_whenTheFileExists() throws IOException {
+        String fileContents = "NEW contents";
+        byte[] fileContentsAsBytes = fileContents.getBytes();
+        Request request = new Request("PUT", "/existing", new HttpHeaders(), fileContents);
+
+        requestProcessor.processRequest(request);
+
+        verify(dataStore, times(1)).put("/existing", fileContentsAsBytes);
+    }
+
+    @Test
+    public void processRequest_createsAndWritesToAFile_forPUT_whenTheFileDoesNotExist() throws IOException {
+        String fileContents = "contents";
+        byte[] fileContentsAsBytes = fileContents.getBytes();
+        Request request = new Request("PUT", "/non-existing", new HttpHeaders(), fileContents);
+        when(dataStore.resourceExists("/non-existing")).thenReturn(false);
+
+        requestProcessor.processRequest(request);
+
+        verify(dataStore, times(1)).put("/non-existing", fileContentsAsBytes);
+    }
+
+    @Test
+    public void processRequest_returns201_forPUTRequest_whenAFileIsCreated() throws IOException {
+        // This test needs to hit the filesystem
+        // - Need to start with a file that doesn't exist, create it, and
+        //   confirm that it was created (Mocks won't work for this)
+        int expectedStatusCode = 201;
+        String pathToTestFiles = "src/test/resources/test-files";
+        FileSystemDataStore dataStore = new FileSystemDataStore(pathToTestFiles);
+        Request request = new Request("PUT", "/non-existing");
+        RequestProcessor requestProcessor = new RequestProcessor(dataStore);
+
+        Response response = requestProcessor.processRequest(request);
+        int statusCode = response.getStatusCode();
+
+        // Need to delete /non-existing, because processRequest creates this file
+        Files.delete(Paths.get(pathToTestFiles, "/non-existing"));
+
+        assertEquals(expectedStatusCode, statusCode);
+    }
+
+    @Test
+    public void processRequest_returns405_forPUTRequest_toADirectory() throws IOException {
+        int expectedStatusCode = 405;
+        Request request = new Request("PUT", "/directory");
+
+        Response response = requestProcessor.processRequest(request);
+        int statusCode = response.getStatusCode();
+
+        assertEquals(expectedStatusCode, statusCode);
+    }
+
+    @Test
+    public void processRequest_returnsTheAllowHeader_forPUTRequest_toADirectory() throws IOException {
+        String expectedAllowHeader = "GET, HEAD";
+        Request request = new Request("PUT", "/directory");
+
+        Response response = requestProcessor.processRequest(request);
+        String allowHeader = response.getHeader("Allow");
+
+        assertEquals(expectedAllowHeader, allowHeader);
     }
 
     @Test
@@ -77,16 +185,6 @@ public class RequestProcessorTest {
         String contentType = response.getHeader("Content-Type");
 
         assertEquals(expectedContentType, contentType);
-    }
-
-    @Test
-    public void processRequest_returns200_forAValidRequest_forGET() throws IOException {
-        int expectedStatusCode = 200;
-
-        Response response = requestProcessor.processRequest(fileGETRequest);
-        int statusCode = response.getStatusCode();
-
-        assertEquals(expectedStatusCode, statusCode);
     }
 
     @Test
@@ -148,17 +246,43 @@ public class RequestProcessorTest {
                 "</ul>\n";
 
         Response response = requestProcessor.processRequest(directoryGETRequest);
-        String bodyAsString = response.getResponseAsString();
+        String bodyAsString = response.toString();
 
         assertTrue(bodyAsString.contains(expectedHTML));
     }
 
     @Test
-    public void processRequest_throwsNotFoundException_ifTheResourceDoesNotExist() {
-        Request notFoundGETRequest = new Request("GET", "/foobar", new ArrayList<>());
+    public void processRequest_throwsNotFoundException_ifTheResourceDoesNotExist() throws IOException {
+        int expectedStatusCode = 404;
+        Request request = new Request("GET", "/foobar");
         when(dataStore.resourceExists("/foobar")).thenReturn(false);
 
-        assertThrows(NotFoundHttpException.class, () -> requestProcessor.processRequest(notFoundGETRequest));
+        Response response = requestProcessor.processRequest(request);
+        int statusCode = response.getStatusCode();
+
+        assertEquals(expectedStatusCode, statusCode);
+    }
+
+    @Test
+    public void processRequest_returnsA405Response_ifMethodIsNotFound() throws IOException {
+        int expectedStatusCode = 405;
+        Request request = new Request("x", "/");
+
+        Response response = requestProcessor.processRequest(request);
+        int statusCode = response.getStatusCode();
+
+        assertEquals(expectedStatusCode, statusCode);
+    }
+
+    @Test
+    public void processRequest_returnsTheAllowHeader_ifMethodIsNotFound() throws IOException {
+        String expectedAllowHeader = "GET, HEAD, PUT";
+        Request request = new Request("x", "/");
+
+        Response response = requestProcessor.processRequest(request);
+        String allowHeader = response.getHeader("Allow");
+
+        assertEquals(expectedAllowHeader, allowHeader);
     }
 
     private byte[] buildBody() {

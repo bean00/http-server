@@ -2,7 +2,6 @@ package com.bean00.datastore;
 
 import org.apache.tika.Tika;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -10,9 +9,16 @@ import java.nio.file.Paths;
 
 public class FileSystemDataStore implements DataStore {
     private String pathToRoot;
+    private ResourceBuilder resourceBuilder = new ResourceBuilder();
 
     public FileSystemDataStore(String pathToRoot) {
         this.pathToRoot = pathToRoot;
+    }
+
+    public boolean isDirectory(String url) {
+        Path path = getFullPath(url);
+
+        return Files.isDirectory(path);
     }
 
     public boolean resourceExists(String url) {
@@ -28,7 +34,7 @@ public class FileSystemDataStore implements DataStore {
         if (Files.isRegularFile(path)) {
             resource = Files.readAllBytes(path);
         } else {
-            resource = getDirectoryListing(url);
+            resource = getDirectoryListing(path, url);
         }
 
         return resource;
@@ -49,24 +55,22 @@ public class FileSystemDataStore implements DataStore {
         return contentType;
     }
 
+    public void put(String url, byte[] fileContents) throws IOException {
+        Path path = getFullPath(url);
+
+        Files.write(path, fileContents);
+    }
+
     private Path getFullPath(String requestURL) {
         Path path = Paths.get(pathToRoot, requestURL);
 
         return path;
     }
 
-    private byte[] getDirectoryListing(String url) {
-        File[] files = getFiles(pathToRoot + url);
-        ResourceBuilder resourceBuilder = new ResourceBuilder();
-        byte[] directoryListing = resourceBuilder.buildHtmlBody(files);
+    private byte[] getDirectoryListing(Path path, String url) {
+        byte[] directoryListing = resourceBuilder.buildHtmlBody(path, url);
 
         return directoryListing;
-    }
-
-    private File[] getFiles(String absoluteUrl) {
-        File directory = new File(absoluteUrl);
-
-        return directory.listFiles();
     }
 
 }

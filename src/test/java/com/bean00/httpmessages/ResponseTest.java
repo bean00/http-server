@@ -1,10 +1,8 @@
-package com.bean00.response;
+package com.bean00.httpmessages;
 
-import com.bean00.request.Method;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -32,11 +30,7 @@ public class ResponseTest {
                 "\r\n" +
                 "file1 contents";
         byte[] expectedResponse = responseAsString.getBytes();
-        HashMap<String, String> headers = new HashMap<>();
-        headers.put("Content-Length", "14");
-        String body = "file1 contents";
-        byte[] rawBody = body.getBytes();
-        Response response = new Response(200, Method.GET, headers, rawBody);
+        Response response = buildResponse(200, Method.GET, 14, "file1 contents");
 
         byte[] actualResponse = response.getResponseAsByteArray();
 
@@ -50,11 +44,7 @@ public class ResponseTest {
                 "Content-Length: 0\r\n" +
                 "\r\n";
         byte[] expectedResponse = responseAsString.getBytes();
-        HashMap<String, String> headers = new HashMap<>();
-        headers.put("Content-Length", "0");
-        String body = "";
-        byte[] rawBody = body.getBytes();
-        Response response = new Response(200, Method.GET, headers, rawBody);
+        Response response = buildResponse(200, Method.GET, 0, "");
 
         byte[] actualResponse = response.getResponseAsByteArray();
 
@@ -68,11 +58,7 @@ public class ResponseTest {
                 "Content-Length: 14\r\n" +
                 "\r\n";
         byte[] expectedResponse = responseAsString.getBytes();
-        HashMap<String, String> headers = new HashMap<>();
-        headers.put("Content-Length", "14");
-        String body = "file1 contents";
-        byte[] rawBody = body.getBytes();
-        Response response = new Response(200, Method.HEAD, headers, rawBody);
+        Response response = buildResponse(200, Method.HEAD, 14, "file1 contents");
 
         byte[] actualResponse = response.getResponseAsByteArray();
 
@@ -80,34 +66,26 @@ public class ResponseTest {
     }
 
     @Test
-    public void getResponseAsString_returnsTheResponse_asAString() throws IOException {
+    public void toString_returnsTheResponse_asAString() {
         String expectedResponse =
                 "HTTP/1.1 200 OK\r\n" +
                 "Content-Length: 14\r\n" +
                 "\r\n" +
                 "file1 contents";
-        HashMap<String, String> headers = new HashMap<>();
-        headers.put("Content-Length", "14");
-        String body = "file1 contents";
-        byte[] rawBody = body.getBytes();
-        Response response = new Response(200, Method.GET, headers, rawBody);
+        Response response = buildResponse(200, Method.GET, 14, "file1 contents");
 
-        String actualResponse = response.getResponseAsString();
+        String actualResponse = response.toString();
 
         assertEquals(expectedResponse, actualResponse);
     }
 
-    @Test
-    public void getContentLength_returnsTheContentLength_asAnInteger() {
-        int expectedContentLength = 14;
-        HashMap<String, String> headers = new HashMap<>();
-        headers.put("Content-Length", "14");
-        Response response = new Response(200, Method.GET, headers, new byte[0]);
+    private Response buildResponse(int statusCode, String method, int contentLength, String body) {
+        String[][] rawHeaders = {{"Content-Length", Integer.toString(contentLength)}};
+        HttpHeaders headers = new HttpHeaders(rawHeaders);
+        byte[] rawBody = body.getBytes();
+        Response response = new Response(statusCode, method, headers, rawBody);
 
-        String contentLengthAsString = response.getHeader("Content-Length");
-        int contentLength = Integer.parseInt(contentLengthAsString);
-
-        assertEquals(expectedContentLength, contentLength);
+        return response;
     }
 
 }

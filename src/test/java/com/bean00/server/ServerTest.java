@@ -1,16 +1,14 @@
 package com.bean00.server;
 
 import com.bean00.httpexception.BadRequestHttpException;
-import com.bean00.httpexception.NotFoundHttpException;
-import com.bean00.request.Request;
-import com.bean00.response.Response;
+import com.bean00.httpmessages.Request;
+import com.bean00.httpmessages.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -36,7 +34,7 @@ public class ServerTest {
         byteArrayOutputStream = new ByteArrayOutputStream();
         writer = new ResponseWriter(byteArrayOutputStream);
 
-        request = new Request("", "", new ArrayList<>());
+        request = new Request("", "");
         when(parser.parseRequest()).thenReturn(request);
         when(processor.processRequest(request)).thenReturn(new Response(200));
     }
@@ -71,19 +69,6 @@ public class ServerTest {
         String response = byteArrayOutputStream.toString();
 
         assertEquals(simple400Response, response);
-    }
-
-    @Test
-    public void run_respondsWith404_whenTheUrlIsNotFound() throws IOException {
-        String simple404Response =
-                "HTTP/1.1 404 Not Found\r\n" +
-                "\r\n";
-        when(processor.processRequest(request)).thenThrow(new NotFoundHttpException());
-
-        server.run(parser, processor, writer);
-        String response = byteArrayOutputStream.toString();
-
-        assertEquals(simple404Response, response);
     }
 
     @Test

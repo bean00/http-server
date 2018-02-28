@@ -1,17 +1,13 @@
-package com.bean00.response;
-
-import com.bean00.request.Method;
+package com.bean00.httpmessages;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 public class Response {
     private static final String PROTOCOL_VERSION = "HTTP/1.1";
 
     private int statusCode;
-    private HashMap<String, String> headers = new HashMap<>();
+    private HttpHeaders headers = new HttpHeaders();
     private byte[] body = new byte[0];
     private boolean displayBody = true;
 
@@ -19,9 +15,13 @@ public class Response {
         this.statusCode = statusCode;
     }
 
-    public Response(int statusCode, String requestMethod, HashMap<String, String> headers, byte[] body) {
+    public Response(int statusCode, HttpHeaders headers) {
         this(statusCode);
         this.headers = headers;
+    }
+
+    public Response(int statusCode, String requestMethod, HttpHeaders headers, byte[] body) {
+        this(statusCode, headers);
         this.body = body;
         this.displayBody = !requestMethod.equals(Method.HEAD);
     }
@@ -38,8 +38,14 @@ public class Response {
         return response;
     }
 
-    public String getResponseAsString() throws IOException {
-        byte[] responseAsByteArray = getResponseAsByteArray();
+    @Override
+    public String toString() {
+        byte[] responseAsByteArray = new byte[0];
+        try {
+            responseAsByteArray = getResponseAsByteArray();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         String response = new String(responseAsByteArray);
 
@@ -55,7 +61,7 @@ public class Response {
     }
 
     public String getHeader(String header) {
-        return headers.get(header);
+        return headers.getHeader(header);
     }
 
     private ByteArrayOutputStream writeOutResponseBeforeBody() throws IOException {
@@ -80,12 +86,7 @@ public class Response {
     }
 
     private byte[] getHeaders() {
-        String headersAsAString = "";
-
-        for (Map.Entry<String, String> header : headers.entrySet()) {
-            String headerString = header.getKey() + ": " + header.getValue() + "\r\n";
-            headersAsAString += headerString;
-        }
+        String headersAsAString = headers.toString();
 
         return headersAsAString.getBytes();
     }

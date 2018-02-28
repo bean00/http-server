@@ -1,13 +1,13 @@
 package com.bean00.server;
 
+import com.bean00.httpmessages.HttpHeaders;
 import com.bean00.datastore.DataStore;
-import com.bean00.httpexception.NotFoundHttpException;
-import com.bean00.request.Request;
-import com.bean00.response.Response;
-import com.bean00.response.Status;
+import com.bean00.httpmessages.Method;
+import com.bean00.httpmessages.Request;
+import com.bean00.httpmessages.Response;
+import com.bean00.httpmessages.Status;
 
 import java.io.IOException;
-import java.util.HashMap;
 
 public class RequestProcessor {
     private DataStore dataStore;
@@ -18,26 +18,70 @@ public class RequestProcessor {
 
     public Response processRequest(Request request) throws IOException {
         String requestMethod = request.getRequestMethod();
-        String requestURL = request.getRequestURL();
+        Response response;
 
-        if (!dataStore.resourceExists(requestURL)) {
-            throw new NotFoundHttpException();
+        if (requestMethod.equals(Method.PUT)) {
+            response = handlePutRequest(request);
+        } else if (requestMethod.equals(Method.GET) || requestMethod.equals(Method.HEAD)) {
+            response = handleGetAndHeadRequests(request);
+        } else {
+            String[] allowedMethods = {Method.GET, Method.HEAD, Method.PUT};
+            response = buildMethodNotAllowedResponse(allowedMethods);
         }
-
-        byte[] body = dataStore.getResource(requestURL);
-        HashMap<String, String> headers = buildHeaders(body, requestURL);
-        Response response = new Response(Status.OK, requestMethod, headers, body);
 
         return response;
     }
 
-    private HashMap<String, String> buildHeaders(byte[] body, String requestURL) throws IOException {
+    private Response handlePutRequest(Request request) throws IOException {
+        String requestURL = request.getRequestURL();
+        byte[] requestBody = request.getBodyAsBytes();
+
+        if (dataStore.isDirectory(requestURL)) {
+            String[] allowedMethods = {Method.GET, Method.HEAD};
+            return buildMethodNotAllowedResponse(allowedMethods);
+        }
+
+        int statusCode = dataStore.resourceExists(requestURL) ? Status.OK : Status.CREATED;
+
+        dataStore.put(requestURL, requestBody);
+
+        return new Response(statusCode);
+    }
+
+    private Response buildMethodNotAllowedResponse(String[] allowedMethods) {
+        String allowedMethodsString = buildAllowedMethodsString(allowedMethods);
+        String[][] rawHeaders = {{"Allow", allowedMethodsString}};
+        HttpHeaders headers = new HttpHeaders(rawHeaders);
+
+        return new Response(Status.METHOD_NOT_ALLOWED, headers);
+    }
+
+    private String buildAllowedMethodsString(String[] allowedMethods) {
+        return String.join(", ", allowedMethods);
+    }
+
+    private Response handleGetAndHeadRequests(Request request) throws IOException {
+        String requestMethod = request.getRequestMethod();
+        String requestURL = request.getRequestURL();
+
+        if (!dataStore.resourceExists(requestURL)) {
+            return new Response(Status.NOT_FOUND);
+        }
+
+        byte[] body = dataStore.getResource(requestURL);
+        HttpHeaders headers = setContentLengthAndType(body, requestURL);
+
+        return new Response(Status.OK, requestMethod, headers, body);
+    }
+
+    private HttpHeaders setContentLengthAndType(byte[] body, String requestURL) throws IOException {
+        HttpHeaders headers = new HttpHeaders();
+
         String contentLength = Integer.toString(body.length);
         String contentType = dataStore.getMediaType(requestURL);
 
-        HashMap<String, String> headers = new HashMap<>();
-        headers.put("Content-Length", contentLength);
-        headers.put("Content-Type", contentType);
+        headers.setHeader("Content-Length", contentLength);
+        headers.setHeader("Content-Type", contentType);
 
         return headers;
     }

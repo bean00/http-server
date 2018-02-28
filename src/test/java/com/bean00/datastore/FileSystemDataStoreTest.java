@@ -3,6 +3,9 @@ package com.bean00.datastore;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -12,6 +15,27 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class FileSystemDataStoreTest {
     public static final String PATH_TO_TEST_FILES = "src/test/resources/test-files";
     private FileSystemDataStore dataStore = new FileSystemDataStore(PATH_TO_TEST_FILES);
+
+    @Test
+    public void isDirectory_returnsFalse_whenTheResourceIsNotADirectory() {
+        boolean isDirectory = dataStore.isDirectory("/file1");
+
+        assertFalse(isDirectory);
+    }
+
+    @Test
+    public void isDirectory_returnsTrue_whenTheResourceIsADirectory() {
+        boolean isDirectory = dataStore.isDirectory("/directory");
+
+        assertTrue(isDirectory);
+    }
+
+    @Test
+    public void isDirectory_returnsFalse_whenTheResourceDoesNotExist() {
+        boolean isDirectory = dataStore.isDirectory("/xx");
+
+        assertFalse(isDirectory);
+    }
 
     @Test
     public void resourceExists_returnsFalse_whenTheResourceDoesNotExist() {
@@ -47,7 +71,7 @@ public class FileSystemDataStoreTest {
 
     @Test
     public void getResource_returnsData_thatContainsLinks() throws IOException {
-        String expectedHTML = "<li><a href=\"/file1\">file1</a></li>\n";
+        String expectedHTML = "<li><a href=\"/directory/file1\">file1</a></li>\n";
 
         byte[] data = dataStore.getResource("/directory");
         String dataAsString = new String(data);
@@ -98,6 +122,39 @@ public class FileSystemDataStoreTest {
         String mediaType = dataStore.getMediaType("/directory");
 
         assertEquals(expectedMediaType, mediaType);
+    }
+
+    @Test
+    public void put_rewritesAFilesContents_ifTheFileExists() throws IOException {
+        Path file = createFile("existing", "old contents");
+        byte[] expectedFileContents = "NEW contents".getBytes();
+
+        dataStore.put("/existing", expectedFileContents);
+        byte[] fileContents = dataStore.getResource("/existing");
+
+        assertArrayEquals(expectedFileContents, fileContents);
+        deleteFile(file);
+    }
+
+    @Test
+    public void put_createsANewFile_andWritesToIt_ifTheFileDoesNotExist() throws IOException {
+        byte[] expectedFileContents = "contents".getBytes();
+
+        dataStore.put("/existing", expectedFileContents);
+        byte[] fileContents = dataStore.getResource("/existing");
+
+        assertArrayEquals(expectedFileContents, fileContents);
+    }
+
+    private Path createFile(String name, String contents) throws IOException {
+        Path file = Paths.get(name);
+        Files.write(file, contents.getBytes());
+
+        return file;
+    }
+
+    private void deleteFile(Path file) throws IOException {
+        Files.delete(file);
     }
 
 }
