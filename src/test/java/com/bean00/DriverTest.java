@@ -18,6 +18,11 @@ public class DriverTest {
         System.setOut(new PrintStream(outContent));
     }
 
+    @AfterEach
+    public void restoreStreams() {
+        System.setOut(System.out);
+    }
+
     @Test
     public void main_printsAnErrorMessage_ifInvalidArgumentsArePassedIn() throws IOException {
         String expectedString = "[ERROR] Invalid arguments passed in";
@@ -28,11 +33,6 @@ public class DriverTest {
         boolean containsExpectedString = fullString.contains(expectedString);
 
         assertTrue(containsExpectedString);
-    }
-
-    @AfterEach
-    public void restoreStreams() {
-        System.setOut(System.out);
     }
 
 }

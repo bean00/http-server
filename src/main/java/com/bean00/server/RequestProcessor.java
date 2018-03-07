@@ -1,5 +1,6 @@
 package com.bean00.server;
 
+import com.bean00.httpexception.BadRequestHttpException;
 import com.bean00.httpmessages.HttpHeaders;
 import com.bean00.datastore.DataStore;
 import com.bean00.httpmessages.Method;
@@ -24,6 +25,8 @@ public class RequestProcessor {
             response = handlePutRequest(request);
         } else if (requestMethod.equals(Method.GET) || requestMethod.equals(Method.HEAD)) {
             response = handleGetAndHeadRequests(request);
+        } else if (requestMethod.equals(Method.DELETE)) {
+            response = handleDeleteRequest(request);
         } else {
             String[] allowedMethods = {Method.GET, Method.HEAD, Method.PUT};
             response = buildMethodNotAllowedResponse(allowedMethods);
@@ -84,6 +87,25 @@ public class RequestProcessor {
         headers.setHeader("Content-Type", contentType);
 
         return headers;
+    }
+
+    private Response handleDeleteRequest(Request request) throws IOException {
+        String requestURL = request.getRequestURL();
+        int statusCode;
+
+        if (dataStore.isDirectoryWithContent(requestURL)) {
+            String errorMessage = "[ERROR] Trying to delete a directory that has contents.\n";
+            throw new BadRequestHttpException(errorMessage);
+        }
+
+        if (!dataStore.resourceExists(requestURL)) {
+            statusCode = Status.NO_CONTENT;
+        } else {
+            dataStore.delete(requestURL);
+            statusCode = Status.OK;
+        }
+
+        return new Response(statusCode);
     }
 
 }

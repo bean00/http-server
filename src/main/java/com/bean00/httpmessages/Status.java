@@ -6,6 +6,7 @@ public class Status {
     // 2XX Success responses
     public static final int OK = 200;
     public static final int CREATED = 201;
+    public static final int NO_CONTENT = 204;
 
     // 4XX Client error responses
     public static final int BAD_REQUEST = 400;
@@ -29,6 +30,7 @@ public class Status {
         // 2XX Success responses
         statusMessages.put(OK, "OK");
         statusMessages.put(CREATED, "Created");
+        statusMessages.put(NO_CONTENT, "No Content");
 
         // 4XX Client error responses
         statusMessages.put(BAD_REQUEST, "Bad Request");

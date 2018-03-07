@@ -25,6 +25,15 @@ public class StatusTest {
     }
 
     @Test
+    public void getMessage_getsTheCorrectMessage_forA_204_status() {
+        String expectedMessage = "No Content";
+
+        String message = Status.getMessage(204);
+
+        assertEquals(expectedMessage, message);
+    }
+
+    @Test
     public void getMessage_getsTheCorrectMessage_forA_400_status() {
         String expectedMessage = "Bad Request";
 

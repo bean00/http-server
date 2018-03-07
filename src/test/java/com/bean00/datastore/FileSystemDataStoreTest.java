@@ -52,6 +52,31 @@ public class FileSystemDataStoreTest {
     }
 
     @Test
+    public void isDirectoryWithContent_returnsFalse_whenTheDirectoryIsEmpty() throws IOException {
+        Files.deleteIfExists(Paths.get(PATH_TO_TEST_FILES, "/empty-directory"));
+        Path emptyDirectory = Files.createDirectory(Paths.get(PATH_TO_TEST_FILES, "/empty-directory"));
+
+        boolean hasContents = dataStore.isDirectoryWithContent("/empty-directory");
+
+        assertFalse(hasContents);
+        deleteIfExists(emptyDirectory);
+    }
+
+    @Test
+    public void isDirectoryWithContent_returnsTrue_whenTheDirectoryHasContents() throws IOException {
+        boolean hasContents = dataStore.isDirectoryWithContent("/directory");
+
+        assertTrue(hasContents);
+    }
+
+    @Test
+    public void isDirectoryWithContent_returnsFalse_forAFile() {
+        boolean hasContents = dataStore.isDirectoryWithContent("/file1");
+
+        assertFalse(hasContents);
+    }
+
+    @Test
     public void getResource_returnsTheCorrectData_forAFileWithContent() throws IOException {
         byte[] expectedData = "file1 contents".getBytes();
 
@@ -126,35 +151,70 @@ public class FileSystemDataStoreTest {
 
     @Test
     public void put_rewritesAFilesContents_ifTheFileExists() throws IOException {
-        Path file = createFile("existing", "old contents");
+        Path file = createFile("/existing", "old contents");
         byte[] expectedFileContents = "NEW contents".getBytes();
 
         dataStore.put("/existing", expectedFileContents);
         byte[] fileContents = dataStore.getResource("/existing");
 
         assertArrayEquals(expectedFileContents, fileContents);
-        deleteFile(file);
+        deleteIfExists(file);
     }
 
     @Test
     public void put_createsANewFile_andWritesToIt_ifTheFileDoesNotExist() throws IOException {
+        Path file = createFile("/non-existing", "");
+        deleteIfExists(file);
         byte[] expectedFileContents = "contents".getBytes();
 
-        dataStore.put("/existing", expectedFileContents);
-        byte[] fileContents = dataStore.getResource("/existing");
+        dataStore.put("/non-existing", expectedFileContents);
+        byte[] fileContents = dataStore.getResource("/non-existing");
 
         assertArrayEquals(expectedFileContents, fileContents);
+        deleteIfExists(file);
+    }
+
+    @Test
+    public void delete_deletesAFile_ifTheFileAlreadyExists() throws IOException {
+        Path file = createFile("/existing", "");
+
+        dataStore.delete("/existing");
+
+        assertFalse(Files.exists(file));
+        deleteIfExists(file);
+    }
+
+    @Test
+    public void delete_makesSureAFileIsDeleted_ifTheFileDoesNotExist() throws IOException {
+        Path file = createFile("/existing", "");
+        deleteIfExists(file);
+
+        dataStore.delete("/existing");
+
+        assertFalse(Files.exists(file));
+        deleteIfExists(file);
+    }
+
+    @Test
+    public void delete_deletesADirectory_ifTheDirectoryIsEmpty() throws IOException {
+        Files.deleteIfExists(Paths.get(PATH_TO_TEST_FILES, "/empty-directory"));
+        Path emptyDirectory = Files.createDirectory(Paths.get(PATH_TO_TEST_FILES, "/empty-directory"));
+
+        dataStore.delete("/empty-directory");
+
+        assertFalse(Files.exists(emptyDirectory));
+        deleteIfExists(emptyDirectory);
     }
 
     private Path createFile(String name, String contents) throws IOException {
-        Path file = Paths.get(name);
+        Path file = Paths.get(PATH_TO_TEST_FILES, name);
         Files.write(file, contents.getBytes());
 
         return file;
     }
 
-    private void deleteFile(Path file) throws IOException {
-        Files.delete(file);
+    private void deleteIfExists(Path resource) throws IOException {
+        Files.deleteIfExists(resource);
     }
 
 }

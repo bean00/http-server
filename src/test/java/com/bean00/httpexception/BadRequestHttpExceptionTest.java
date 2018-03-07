@@ -15,10 +15,19 @@ public class BadRequestHttpExceptionTest {
     }
 
     @Test
-    public void badRequestHttpException_hasAMessage() {
+    public void badRequestHttpException_hasAnEmptyMessage_forTheDefaultConstructor() {
+        String errorMessage = "";
         RuntimeException exception = new BadRequestHttpException();
 
-        assertEquals("Bad request", exception.getMessage());
+        assertEquals(errorMessage, exception.getMessage());
+    }
+
+    @Test
+    public void badRequestHttpException_hasTheMessage_thatWasPassedIn() {
+        String errorMessage = "Custom bad request message";
+        RuntimeException exception = new BadRequestHttpException(errorMessage);
+
+        assertEquals("Custom bad request message", exception.getMessage());
     }
 
 }

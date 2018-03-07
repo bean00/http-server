@@ -2,9 +2,6 @@
 
 A project that implements a basic HTTP server, built using Java. It's meant to serve up both static and dynamic websites. The behavior of the server is verified using Cob Spec (see Run Acceptance Tests section below).
 
-The HTTP Server supports the following:
-1. HTTP Methods: simple GET and HEAD.
-
 ## Getting Started
 Clone this repository to your local machine
 <br>

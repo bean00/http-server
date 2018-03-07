@@ -1,5 +1,6 @@
 package com.bean00.server;
 
+import com.bean00.httpexception.BadRequestHttpException;
 import com.bean00.httpmessages.HttpHeaders;
 import com.bean00.datastore.DataStore;
 import com.bean00.datastore.FileSystemDataStore;
@@ -12,9 +13,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -41,6 +40,7 @@ public class RequestProcessorTest {
         when(dataStore.resourceExists("/directory")).thenReturn(true);
         when(dataStore.getResource("/directory")).thenReturn(body);
         when(dataStore.getMediaType("/directory")).thenReturn("text/html; charset=utf-8");
+        when(dataStore.isDirectoryWithContent("/directory")).thenReturn(true);
 
         when(dataStore.resourceExists("/existing")).thenReturn(true);
     }
@@ -118,7 +118,6 @@ public class RequestProcessorTest {
         String fileContents = "contents";
         byte[] fileContentsAsBytes = fileContents.getBytes();
         Request request = new Request("PUT", "/non-existing", new HttpHeaders(), fileContents);
-        when(dataStore.resourceExists("/non-existing")).thenReturn(false);
 
         requestProcessor.processRequest(request);
 
@@ -252,10 +251,9 @@ public class RequestProcessorTest {
     }
 
     @Test
-    public void processRequest_throwsNotFoundException_ifTheResourceDoesNotExist() throws IOException {
+    public void processRequest_returnsA404Response_ifTheResourceDoesNotExist() throws IOException {
         int expectedStatusCode = 404;
-        Request request = new Request("GET", "/foobar");
-        when(dataStore.resourceExists("/foobar")).thenReturn(false);
+        Request request = new Request("GET", "/non-existing");
 
         Response response = requestProcessor.processRequest(request);
         int statusCode = response.getStatusCode();
@@ -283,6 +281,57 @@ public class RequestProcessorTest {
         String allowHeader = response.getHeader("Allow");
 
         assertEquals(expectedAllowHeader, allowHeader);
+    }
+
+    @Test
+    public void processRequest_returnsA200Response_ifTheFileIsDeleted_forDELETE() throws IOException {
+        int expectedStatusCode = 200;
+        Request request = new Request("DELETE", "/file1");
+
+        Response response = requestProcessor.processRequest(request);
+        int statusCode = response.getStatusCode();
+
+        assertEquals(expectedStatusCode, statusCode);
+    }
+
+    @Test
+    public void processRequest_returns204_ifDeleting_aResourceThatDoesNotExist_forDELETE() throws IOException {
+        int expectedStatusCode = 204;
+        Request request = new Request("DELETE", "/non-existing");
+        when(dataStore.resourceExists("/non-existing")).thenReturn(false);
+
+        Response response = requestProcessor.processRequest(request);
+        int statusCode = response.getStatusCode();
+
+        assertEquals(expectedStatusCode, statusCode);
+    }
+
+    @Test
+    public void processRequest_deletesTheFile_forDELETE() throws IOException {
+        Request request = new Request("DELETE", "/file1");
+
+        requestProcessor.processRequest(request);
+
+        verify(dataStore, times(1)).delete("/file1");
+    }
+
+    @Test
+    public void processRequest_throwsABadRequestException_forADirectoryWithContents_forDELETE() {
+        Request request = new Request("DELETE", "/directory");
+
+        assertThrows(BadRequestHttpException.class, () -> requestProcessor.processRequest(request));
+    }
+
+    @Test
+    public void processRequest_throwsAnException_thatIncludesAMessage_forDeletingADirectoryWithContents() {
+        String expectedErrorMessage = "[ERROR] Trying to delete a directory that has contents.\n";
+        Request request = new Request("DELETE", "/empty-directory");
+        when(dataStore.isDirectoryWithContent("/empty-directory")).thenReturn(true);
+
+        Throwable exception = assertThrows(BadRequestHttpException.class,
+                () -> requestProcessor.processRequest(request));
+
+        assertEquals(expectedErrorMessage, exception.getMessage());
     }
 
     private byte[] buildBody() {

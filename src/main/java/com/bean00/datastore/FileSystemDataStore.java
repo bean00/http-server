@@ -2,6 +2,7 @@ package com.bean00.datastore;
 
 import org.apache.tika.Tika;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -25,6 +26,19 @@ public class FileSystemDataStore implements DataStore {
         Path path = getFullPath(url);
 
         return Files.exists(path);
+    }
+
+    public boolean isDirectoryWithContent(String url) {
+        boolean hasContents = false;
+
+        File resource = new File(pathToRoot + url);
+
+        if (resource.isDirectory()) {
+            int numberOfFilesInDirectory = resource.list().length;
+            hasContents = numberOfFilesInDirectory > 0;
+        }
+
+        return hasContents;
     }
 
     public byte[] getResource(String url) throws IOException {
@@ -59,6 +73,12 @@ public class FileSystemDataStore implements DataStore {
         Path path = getFullPath(url);
 
         Files.write(path, fileContents);
+    }
+
+    public void delete(String url) throws IOException {
+        Path path = getFullPath(url);
+
+        Files.deleteIfExists(path);
     }
 
     private Path getFullPath(String requestURL) {
