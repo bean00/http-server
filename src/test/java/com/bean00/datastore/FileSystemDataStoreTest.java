@@ -45,7 +45,14 @@ public class FileSystemDataStoreTest {
     }
 
     @Test
-    public void resourceExists_returnsTrue_whenTheResourceExists() {
+    public void resourceExists_returnsTrue_whenTheResourceExists_andItIsAFile() {
+        boolean resourceExists = dataStore.resourceExists("/file1");
+
+        assertTrue(resourceExists);
+    }
+
+    @Test
+    public void resourceExists_returnsTrue_whenTheResourceExists_andItIsADirectory() {
         boolean resourceExists = dataStore.resourceExists("/directory");
 
         assertTrue(resourceExists);
@@ -53,8 +60,8 @@ public class FileSystemDataStoreTest {
 
     @Test
     public void isDirectoryWithContent_returnsFalse_whenTheDirectoryIsEmpty() throws IOException {
-        Files.deleteIfExists(Paths.get(PATH_TO_TEST_FILES, "/empty-directory"));
-        Path emptyDirectory = Files.createDirectory(Paths.get(PATH_TO_TEST_FILES, "/empty-directory"));
+        Files.deleteIfExists(getFullPath("/empty-directory"));
+        Path emptyDirectory = Files.createDirectory(getFullPath("/empty-directory"));
 
         boolean hasContents = dataStore.isDirectoryWithContent("/empty-directory");
 
@@ -150,6 +157,27 @@ public class FileSystemDataStoreTest {
     }
 
     @Test
+    public void createDirectory_createsADirectory_ifItDidNotExist() throws IOException {
+        Files.deleteIfExists(getFullPath("/test-directory"));
+
+        dataStore.createDirectory("/test-directory");
+
+        assertTrue(Files.isDirectory(getFullPath("/test-directory")));
+        deleteIfExists(getFullPath("/test-directory"));
+    }
+
+    @Test
+    public void createDirectory_leavesTheDirectory_ifItAlreadyExists() throws IOException {
+        Files.deleteIfExists(getFullPath("/test-directory"));
+        Path testDirectory = Files.createDirectory(getFullPath("/test-directory"));
+
+        dataStore.createDirectory("/test-directory");
+
+        assertTrue(Files.isDirectory(testDirectory));
+        deleteIfExists(testDirectory);
+    }
+
+    @Test
     public void put_rewritesAFilesContents_ifTheFileExists() throws IOException {
         Path file = createFile("/existing", "old contents");
         byte[] expectedFileContents = "NEW contents".getBytes();
@@ -197,20 +225,24 @@ public class FileSystemDataStoreTest {
 
     @Test
     public void delete_deletesADirectory_ifTheDirectoryIsEmpty() throws IOException {
-        Files.deleteIfExists(Paths.get(PATH_TO_TEST_FILES, "/empty-directory"));
-        Path emptyDirectory = Files.createDirectory(Paths.get(PATH_TO_TEST_FILES, "/empty-directory"));
+        Files.deleteIfExists(getFullPath("/empty-directory"));
+        Path emptyDirectory = Files.createDirectory(getFullPath("/empty-directory"));
 
         dataStore.delete("/empty-directory");
 
-        assertFalse(Files.exists(emptyDirectory));
+        assertFalse(Files.isDirectory(emptyDirectory));
         deleteIfExists(emptyDirectory);
     }
 
     private Path createFile(String name, String contents) throws IOException {
-        Path file = Paths.get(PATH_TO_TEST_FILES, name);
+        Path file = getFullPath(name);
         Files.write(file, contents.getBytes());
 
         return file;
+    }
+
+    private Path getFullPath(String url) {
+        return Paths.get(PATH_TO_TEST_FILES, url);
     }
 
     private void deleteIfExists(Path resource) throws IOException {

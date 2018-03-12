@@ -69,6 +69,12 @@ public class FileSystemDataStore implements DataStore {
         return contentType;
     }
 
+    public void createDirectory(String url) throws IOException {
+        Path path = getFullPath(url);
+
+        Files.createDirectories(path);
+    }
+
     public void put(String url, byte[] fileContents) throws IOException {
         Path path = getFullPath(url);
 

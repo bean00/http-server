@@ -31,7 +31,7 @@ public class ServerTest {
     private Request request;
 
     @BeforeEach
-    public void setup() throws IOException {
+    public void setup() throws Throwable {
         server = new Server();
         parser = mock(RequestParser.class);
         processor = mock(RequestProcessor.class);
@@ -83,7 +83,7 @@ public class ServerTest {
     }
 
     @Test
-    public void run_respondsWith500_whenThereIsANonHandledError() throws IOException {
+    public void run_respondsWith500_whenThereIsANonHandledError() throws Throwable {
         String simple500Response =
                 "HTTP/1.1 500 Internal Server Error\r\n" +
                 "\r\n";
@@ -96,7 +96,7 @@ public class ServerTest {
     }
 
     @Test
-    public void run_printsAnErrorMessage_ifTheBadRequestExceptionHasAMessage() throws IOException {
+    public void run_printsAnErrorMessage_ifTheBadRequestExceptionHasAMessage() throws Throwable {
         String expectedOutput = "Trying to delete a directory that has contents";
         request = new Request("DELETE", "/directory-with-contents");
         Throwable badRequestException = new BadRequestHttpException(expectedOutput);
@@ -110,7 +110,7 @@ public class ServerTest {
     }
 
     @Test
-    public void run_doesNotPrintAnything_ifThereIsNotAnyErrorMessage() throws IOException {
+    public void run_doesNotPrintAnything_ifThereIsNotAnyErrorMessage() throws Throwable {
         String expectedOutput = "";
         request = new Request("DELETE", "/file");
         Throwable badRequestException = new BadRequestHttpException();

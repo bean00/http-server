@@ -14,6 +14,8 @@ public interface DataStore {
 
     String getMediaType(String url) throws IOException;
 
+    void createDirectory(String url) throws IOException;
+
     void put(String url, byte[] fileContents) throws IOException;
 
     void delete(String url) throws IOException;
