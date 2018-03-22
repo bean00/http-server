@@ -48,7 +48,7 @@ public class CobSpecController {
         String postURL = requestURL + "/data";
         int statusCode;
 
-        if (!dataStore.resourceExists(requestURL)) {
+        if (!dataStore.resourceExists(postURL)) {
             dataStore.createDirectory(requestURL);
             statusCode = Status.CREATED;
         } else {

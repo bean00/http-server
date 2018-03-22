@@ -227,9 +227,10 @@ public class CobSpecControllerTest {
     }
 
     @Test
-    public void handleCatFormPost_returns201_whenAResourceIsCreated_forPOST() throws IOException {
+    public void handleCatFormPost_returns201_whenTheResourceDoesNotExist_forPOST() throws IOException {
         int expectedStatusCode = 201;
         Request request = new Request("POST", "/cat-form");
+        when(dataStore.resourceExists("/cat-form/data")).thenReturn(false);
 
         Response response = cobSpecCtrl.handleCatFormPost(request);
         int statusCode = response.getStatusCode();
@@ -272,7 +273,7 @@ public class CobSpecControllerTest {
     public void handleCatFormPost_returns200_whenTheResourceAlreadyExists_forPOST() throws IOException {
         int expectedStatusCode = 200;
         Request request = new Request("POST", "/cat-form");
-        when(dataStore.resourceExists("/cat-form")).thenReturn(true);
+        when(dataStore.resourceExists("/cat-form/data")).thenReturn(true);
 
         Response response = cobSpecCtrl.handleCatFormPost(request);
         int statusCode = response.getStatusCode();
